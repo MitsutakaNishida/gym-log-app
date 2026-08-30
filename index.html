@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2f6fed">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>運動記録 β</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#172033;--muted:#6d7687;--blue:#2f6fed;--blue2:#eaf1ff;--green:#daf6df;--red:#ffe2e2;--line:#dfe5ef}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:760px;margin:auto;padding:18px 16px 80px} h1{font-size:28px;margin:6px 0 2px}.sub{color:var(--muted);margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;margin:14px 0;box-shadow:0 3px 14px rgba(20,35,70,.05)}
+.section-title{font-size:20px;font-weight:800;margin-bottom:10px} label{display:block;font-size:13px;color:var(--muted);margin:8px 0 4px}
+input,select,textarea{width:100%;border:1px solid #ccd4e0;border-radius:14px;padding:13px;font-size:18px;background:#fff}
+button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:16px}.primary{background:var(--blue);color:white}.soft{background:var(--blue2);color:#204d9e}.green{background:var(--green);color:#176b28}.red{background:var(--red);color:#9c2424}
+.toprow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}.quick button{background:#f0f3f8;color:#33405a;padding:10px 6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.chip{background:#eef3ff;color:#244d9b;border-radius:999px;padding:10px 13px;font-weight:700}.chip.active{background:var(--blue);color:#fff}
+.suggest{margin-top:8px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}.suggest button{display:block;width:100%;text-align:left;border-radius:0;background:#fff;border-bottom:1px solid var(--line);color:var(--ink)}.suggest button:last-child{border-bottom:0}
+.exercise{border-top:1px solid var(--line);padding:13px 0}.exercise:first-child{border-top:0}.name{font-size:18px;font-weight:800}.small{font-size:13px;color:var(--muted)}
+.setrow{display:grid;grid-template-columns:1fr auto 1fr auto;gap:7px;align-items:center;margin-top:8px}.setrow input{font-size:17px;padding:11px}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#f7f9fd;border-radius:16px;padding:12px;text-align:center}.stat b{display:block;font-size:22px}.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.2</span></h1>
+<p class="sub">できるだけ打たない。最近使った種目はタップ、なければ検索か音声。</p>
+
+<div class="toprow">
+<button class="primary" onclick="showTab('today')">今日</button>
+<button class="soft" onclick="showTab('history')">履歴</button>
+</div>
+
+<section id="todayTab">
+<div class="card">
+<div class="section-title">プロフィール</div>
+<div class="grid2">
+<div><label>体重 kg</label><input id="weight" type="number" inputmode="decimal" placeholder="例 75"></div>
+<div><label>筋トレ強度</label><select id="intensity"><option value="3.5">軽め</option><option value="5" selected>普通</option><option value="6">きつめ</option></select></div>
+</div>
+<button class="soft" style="margin-top:10px;width:100%" onclick="saveProfile()">保存</button>
+</div>
+
+<div class="card">
+<div class="section-title">種目を選ぶ</div>
+
+<label>最近使った種目</label>
+<div id="recentChips" class="chips"></div>
+
+<label>検索・音声入力</label>
+<div style="display:grid;grid-template-columns:1fr auto;gap:8px">
+<input id="exerciseSearch" placeholder="例：レッグプレス" autocomplete="off">
+<button class="soft" onclick="voiceSearch()">🎤</button>
+</div>
+<div id="suggestions" class="suggest hidden"></div>
+
+<div style="margin-top:12px">
+<div class="small">選択中</div>
+<div id="selectedExercise" class="name">未選択</div>
+</div>
+
+<div class="grid2" style="margin-top:8px">
+<div><label>前回</label><div id="previousBox" class="small" style="padding:14px 4px">—</div></div>
+<div><label>前回コピー</label><button class="soft" style="width:100%" onclick="copyPrevious()">前回値を入れる</button></div>
+</div>
+
+<div class="grid2" style="margin-top:8px">
+<div>
+<label>重量 kg</label><input id="kg" type="number" inputmode="decimal">
+<div class="quick"><button onclick="bump('kg',-5)">-5</button><button onclick="bump('kg',-2.5)">-2.5</button><button onclick="bump('kg',2.5)">+2.5</button><button onclick="bump('kg',5)">+5</button></div>
+</div>
+<div>
+<label>回数</label><input id="reps" type="number" inputmode="numeric">
+<div class="quick"><button onclick="bump('reps',-2)">-2</button><button onclick="bump('reps',-1)">-1</button><button onclick="bump('reps',1)">+1</button><button onclick="bump('reps',2)">+2</button></div>
+</div>
+</div>
+<button class="primary" style="margin-top:12px;width:100%" onclick="addSet()">＋ このセットを記録</button>
+</div>
+
+<div class="card">
+<div class="section-title">今日のセット</div>
+<div id="setsList"><span class="small">まだ記録なし</span></div>
+</div>
+
+<div class="card">
+<div class="section-title">有酸素・その他</div>
+<div class="grid2">
+<div><label>種目</label><select id="cardioType">
+<option value="7.0">エアロバイク 普通</option>
+<option value="8.5">エアロバイク 強め</option>
+<option value="8.0">ランニング 軽め</option>
+<option value="5.0">ウォーキング 速め</option>
+<option value="4.5">ゴルフ練習場</option>
+<option value="6.0">その他 有酸素</option>
+</select></div>
+<div><label>時間 分</label><input id="cardioMin" type="number" inputmode="numeric" value="20"></div>
+</div>
+<div class="quick"><button onclick="setMinutes(10)">10分</button><button onclick="setMinutes(20)">20分</button><button onclick="setMinutes(30)">30分</button><button onclick="setMinutes(45)">45分</button></div>
+<button class="primary" style="margin-top:12px;width:100%" onclick="addCardio()">＋ 記録</button>
+<div id="cardioList" style="margin-top:12px"></div>
+</div>
+
+<div class="card">
+<div class="section-title">今日のまとめ</div>
+<div class="summary">
+<div class="stat"><span class="small">セット</span><b id="sumSets">0</b></div>
+<div class="stat"><span class="small">運動時間</span><b id="sumMin">0</b><span class="small">分</span></div>
+<div class="stat"><span class="small">推定消費</span><b id="sumKcal">0</b><span class="small">kcal</span></div>
+</div>
+<label>メモ（任意）</label><textarea id="memo" placeholder="空欄でOK"></textarea>
+<button class="green" style="margin-top:10px;width:100%" onclick="finishSession()">今日の運動を保存</button>
+<p class="small">※消費カロリーは概算です。</p>
+</div>
+</section>
+
+<section id="historyTab" class="hidden">
+<div class="card"><div class="section-title">履歴</div><div id="historyList"></div></div>
+</section>
+</div>
+
+<script>
+const STORE='gym_log_beta_v1';
+const PROFILE='gym_log_profile_v1';
+const RECENT='gym_log_recent_exercises_v1';
+const exercises=['レッグプレス','ショルダープレス','チェストプレス','ラットプルダウン','シーテッドロー','レッグカール','レッグエクステンション','カーフレイズ','アームカール','トライセプス','レッグレイズ','グルートマシン','ベンチプレス','スクワット','デッドリフト','チンニング','その他'];
+let selected='';
+let previousSets=[];
+let current={date:new Date().toISOString().slice(0,10),sets:[],cardio:[],memo:''};
+
+function allLogs(){return JSON.parse(localStorage.getItem(STORE)||'[]')}
+function getRecent(){return JSON.parse(localStorage.getItem(RECENT)||'[]')}
+function saveRecent(name){
+ let r=getRecent().filter(x=>x!==name); r.unshift(name); r=r.slice(0,8);
+ localStorage.setItem(RECENT,JSON.stringify(r)); renderRecent();
+}
+function renderRecent(){
+ let r=getRecent(); if(!r.length) r=['レッグプレス','ショルダープレス','レッグレイズ','エアロバイク 普通'];
+ recentChips.innerHTML=r.map(x=>`<button class="chip ${selected===x?'active':''}" onclick="selectExercise('${x}')">${x}</button>`).join('');
+}
+function selectExercise(name){
+ if(name.startsWith('エアロバイク')){cardioType.selectedIndex=0; window.scrollTo({top:document.body.scrollHeight/2,behavior:'smooth'});return}
+ selected=name; selectedExercise.textContent=name; exerciseSearch.value=name; suggestions.classList.add('hidden');
+ loadPrevious(name); renderRecent();
+}
+function loadPrevious(name){
+ previousSets=[]; const logs=allLogs();
+ for(const log of logs){const arr=(log.sets||[]).filter(s=>s.exercise===name); if(arr.length){previousSets=arr;break;}}
+ if(previousSets.length){
+  previousBox.textContent=previousSets.map(s=>`${s.kg}kg×${s.reps}`).join(' / ');
+  const last=previousSets[previousSets.length-1]; kg.value=last.kg; reps.value=last.reps;
+ } else { previousBox.textContent='記録なし'; kg.value=''; reps.value='';}
+}
+function copyPrevious(){ if(!previousSets.length)return; const last=previousSets[previousSets.length-1];kg.value=last.kg;reps.value=last.reps}
+exerciseSearch.addEventListener('input',()=>{
+ const q=exerciseSearch.value.trim(); if(!q){suggestions.classList.add('hidden');return}
+ const hits=exercises.filter(x=>x.includes(q)).slice(0,6);
+ suggestions.innerHTML=hits.map(x=>`<button onclick="selectExercise('${x}')">${x}</button>`).join('');
+ suggestions.classList.toggle('hidden',!hits.length);
+});
+function voiceSearch(){
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){alert('この環境では音声認識を利用できません');return}
+ const r=new SR(); r.lang='ja-JP'; r.interimResults=false; r.maxAlternatives=1;
+ r.onresult=e=>{
+  const text=e.results[0][0].transcript.trim(); exerciseSearch.value=text;
+  const hit=exercises.find(x=>x===text)||exercises.find(x=>x.includes(text)||text.includes(x));
+  if(hit) selectExercise(hit); else {
+    const ev=new Event('input'); exerciseSearch.dispatchEvent(ev);
+  }
+ };
+ r.onerror=()=>alert('音声入力に失敗しました');
+ r.start();
+}
+function bump(id,d){const el=document.getElementById(id);el.value=Math.max(0,(parseFloat(el.value)||0)+d)}
+function addSet(){
+ if(!selected){alert('種目を選んでください');return}
+ const k=parseFloat(kg.value),r=parseInt(reps.value); if(isNaN(k)||isNaN(r)){alert('重量と回数を入れてください');return}
+ current.sets.push({exercise:selected,kg:k,reps:r}); saveRecent(selected); render();
+}
+function setMinutes(m){cardioMin.value=m}
+function addCardio(){const opt=cardioType.options[cardioType.selectedIndex],min=parseInt(cardioMin.value);if(!min){alert('時間を入れてください');return}current.cardio.push({name:opt.text,met:parseFloat(opt.value),minutes:min});render()}
+function removeSet(i){current.sets.splice(i,1);render()} function removeCardio(i){current.cardio.splice(i,1);render()}
+function kcal(met,kg,min){return met*3.5*kg/200*min}
+function estimate(){const wt=parseFloat(weight.value)||0,met=parseFloat(intensity.value)||5;const sm=Math.max(0,Math.round(current.sets.length*3.5));const cm=current.cardio.reduce((a,c)=>a+c.minutes,0);let total=wt?kcal(met,wt,sm):0;for(const c of current.cardio)total+=wt?kcal(c.met,wt,c.minutes):0;return{total:Math.round(total),minutes:sm+cm}}
+function render(){
+ if(!current.sets.length)setsList.innerHTML='<span class="small">まだ記録なし</span>';else{
+  const groups={};current.sets.forEach((s,i)=>{(groups[s.exercise]??=[]).push({...s,i})});
+  setsList.innerHTML=Object.entries(groups).map(([name,arr])=>`<div class="exercise"><div class="name">${name}</div>${arr.map(s=>`<div class="setrow"><input value="${s.kg}" readonly><span>kg ×</span><input value="${s.reps}" readonly><button class="red" onclick="removeSet(${s.i})">×</button></div>`).join('')}</div>`).join('');
+ }
+ cardioList.innerHTML=current.cardio.map((c,i)=>`<div class="exercise"><b>${c.name}</b> ${c.minutes}分 <button class="red" style="float:right;padding:8px 10px" onclick="removeCardio(${i})">削除</button></div>`).join('');
+ const e=estimate();sumSets.textContent=current.sets.length;sumMin.textContent=e.minutes;sumKcal.textContent=e.total;
+}
+function saveProfile(){localStorage.setItem(PROFILE,JSON.stringify({weight:weight.value,intensity:intensity.value}));alert('保存しました')}
+function finishSession(){
+ if(!current.sets.length&&!current.cardio.length){alert('記録がありません');return}
+ const e=estimate(),wt=parseFloat(weight.value)||0;current.memo=memo.value.trim();current.weight=wt;current.kcal=e.total;current.minutes=e.minutes;current.savedAt=new Date().toISOString();
+ const logs=allLogs();logs.unshift(JSON.parse(JSON.stringify(current)));localStorage.setItem(STORE,JSON.stringify(logs));saveProfile();
+ alert('保存しました');current={date:new Date().toISOString().slice(0,10),sets:[],cardio:[],memo:''};memo.value='';render();
+}
+function renderHistory(){
+ const logs=allLogs(); if(!logs.length){historyList.innerHTML='<span class="small">まだ履歴なし</span>';return}
+ historyList.innerHTML=logs.map(l=>`<div class="exercise"><div class="name">${l.date}</div><div>${[...new Set((l.sets||[]).map(s=>s.exercise))].join(' / ')}</div><div class="small">${l.minutes||0}分・${l.kcal||0}kcal</div></div>`).join('');
+}
+function showTab(t){todayTab.classList.toggle('hidden',t!=='today');historyTab.classList.toggle('hidden',t!=='history');if(t==='history')renderHistory()}
+(function load(){const p=JSON.parse(localStorage.getItem(PROFILE)||'{}');if(p.weight)weight.value=p.weight;if(p.intensity)intensity.value=p.intensity;renderRecent();render();})();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
+</script>
+</body>
+</html>
