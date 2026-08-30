@@ -1,6 +1,6 @@
 {
-  "name": "運動記録 β",
-  "short_name": "運動記録",
+  "name": "トレーニング記録",
+  "short_name": "トレ記録",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f5f7fb",

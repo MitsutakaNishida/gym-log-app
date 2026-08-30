@@ -21,12 +21,22 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 .exercise{border-top:1px solid var(--line);padding:13px 0}.exercise:first-child{border-top:0}.name{font-size:18px;font-weight:800}.small{font-size:13px;color:var(--muted)}
 .setrow{display:grid;grid-template-columns:1fr auto 1fr auto;gap:7px;align-items:center;margin-top:8px}.setrow input{font-size:17px;padding:11px}
 .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#f7f9fd;border-radius:16px;padding:12px;text-align:center}.stat b{display:block;font-size:22px}.hidden{display:none!important}
+.rowBtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.rowBtns button{flex:1;min-width:120px}
+.draftNotice{background:#fff7d8;border:1px solid #f0d57a;border-radius:16px;padding:12px;margin:10px 0}
+.historyDay{border:1px solid var(--line);border-radius:18px;margin:10px 0;overflow:hidden;background:#fff}
+.historyHead{width:100%;background:#fff;color:var(--ink);text-align:left;border-radius:0;padding:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.historyBody{padding:0 14px 14px;background:#fbfcfe}.historySession{border-top:1px solid var(--line);padding:12px 0}.historySession:first-child{border-top:0}
+.detailExercise{margin:8px 0}.detailSets{color:var(--muted);font-size:14px;margin-top:3px}
+.editSetRow{display:grid;grid-template-columns:1.5fr .7fr .7fr auto;gap:6px;align-items:center;margin:7px 0}.editSetRow input,.editSetRow select{font-size:15px;padding:10px}
+.aliasRow{display:grid;grid-template-columns:1fr auto 1fr auto;gap:6px;align-items:center;margin-top:8px}.aliasArrow{text-align:center;color:var(--muted);font-weight:800}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef3ff;color:#244d9b;font-size:12px;font-weight:700}
+
 </style>
 </head>
 <body>
 <div class="wrap">
-<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.4</span></h1>
-<p class="sub">できるだけ打たない。最近使った種目はタップ、なければ検索か音声。</p>
+<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.5</span></h1>
+<p class="sub">途中保存・あとから編集対応。種目名の言い換えも使えます。</p>
 
 <div class="toprow">
 <button class="primary" onclick="showTab('today')">今日</button>
@@ -34,6 +44,7 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 </div>
 
 <section id="todayTab">
+<div id="draftNotice" class="draftNotice hidden"><b>一時保存データがあります</b><div id="draftTime" class="small"></div><div class="rowBtns"><button class="primary" onclick="resumeDraft()">続きを開く</button><button class="red" onclick="discardDraft()">破棄</button></div></div>
 <div class="card">
 <div class="section-title">プロフィール</div>
 <div class="grid2">
@@ -80,6 +91,15 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 </div>
 
 <div class="card">
+<div class="section-title">種目名の言い換え</div>
+<p class="small">呼び方を登録すると、検索や音声入力で正式な種目名に置き換えます。</p>
+<div class="grid2"><div><label>呼び方</label><input id="aliasFrom" placeholder="例：アームカール"></div><div><label>正式名</label><input id="aliasTo" list="exerciseNames" placeholder="例：ダンベルカール"></div></div>
+<datalist id="exerciseNames"></datalist>
+<button class="soft" style="margin-top:10px;width:100%" onclick="addCustomAlias()">＋ 言い換えを登録</button>
+<div id="aliasList" style="margin-top:10px"></div>
+</div>
+
+<div class="card">
 <div class="section-title">今日のセット</div>
 <div id="setsList"><span class="small">まだ記録なし</span></div>
 </div>
@@ -110,13 +130,24 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 <div class="stat"><span class="small">推定消費</span><b id="sumKcal">0</b><span class="small">kcal</span></div>
 </div>
 <label>メモ（任意）</label><textarea id="memo" placeholder="空欄でOK"></textarea>
-<button class="green" style="margin-top:10px;width:100%" onclick="finishSession()">今日の運動を保存</button>
+<div class="rowBtns">
+<button class="soft" onclick="saveDraft(true)">💾 一時保存</button>
+<button class="green" onclick="finishSession()">✅ 今日の運動を保存</button>
+</div>
 <p class="small">※消費カロリーは概算です。</p>
 </div>
 </section>
 
 <section id="historyTab" class="hidden">
-<div class="card"><div class="section-title">履歴</div><div id="historyList"></div></div>
+<div id="historyMain" class="card"><div class="section-title">履歴</div><p class="small">同じ日の記録はまとめて表示。日付をタップすると詳細が開きます。</p><div id="historyList"></div></div>
+<div id="editHistoryCard" class="card hidden">
+<div class="section-title">保存済み記録を修正</div>
+<div id="editHistoryDate" class="small"></div>
+<div id="editSetsList"></div>
+<div class="section-title" style="font-size:17px;margin-top:14px">有酸素・その他</div><div id="editCardioList"></div>
+<label>メモ</label><textarea id="editMemo"></textarea>
+<div class="rowBtns"><button class="soft" onclick="cancelHistoryEdit()">キャンセル</button><button class="green" onclick="saveHistoryEdit()">修正を保存</button></div>
+</div>
 </section>
 </div>
 
@@ -124,6 +155,8 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 const STORE='gym_log_beta_v1';
 const PROFILE='gym_log_profile_v1';
 const RECENT='gym_log_recent_exercises_v1';
+const DRAFT='gym_log_draft_v1';
+const CUSTOM_ALIASES='gym_log_custom_aliases_v1';
 const exerciseDB=[
 {n:'レッグプレス',cat:['脚','マシン']},
 {n:'リニアレッグプレス',cat:['脚','マシン']},
@@ -233,6 +266,8 @@ const exerciseDB=[
 {n:'ケーブルプレスダウン',cat:['腕','三頭','ケーブル']},
 {n:'ローププレスダウン',cat:['腕','三頭','ケーブル']},
 {n:'オーバーヘッドトライセプスエクステンション',cat:['腕','三頭','ダンベル','ケーブル']},
+{n:'フレンチプレス（ワンアーム）',cat:['腕','三頭','ダンベル']},
+{n:'フレンチプレス（両手）',cat:['腕','三頭','ダンベル']},
 {n:'ダンベルキックバック',cat:['腕','三頭','ダンベル']},
 {n:'スカルクラッシャー',cat:['腕','三頭','バーベル']},
 {n:'ナローベンチプレス',cat:['腕','三頭','胸','バーベル']},
@@ -272,6 +307,11 @@ const cardioActivities=[
 
 const aliases={
 'プリーチャー':'プリーチャーカール',
+'アームカール':'ダンベルカール',
+'ワンアームフレンチ':'フレンチプレス（ワンアーム）',
+'ワンハンドフレンチ':'フレンチプレス（ワンアーム）',
+'フレンチプレスワンアーム':'フレンチプレス（ワンアーム）',
+'フレンチプレス片手':'フレンチプレス（ワンアーム）',
 'プリチャー':'プリーチャーカール',
 'アブダクション':'ヒップアブダクション',
 'アダクション':'ヒップアダクション',
@@ -291,8 +331,20 @@ const categoryTerms=['脚','胸','背中','肩','腕','腹','尻','自重','ダ�
 let selected='';
 let previousSets=[];
 let current={date:new Date().toISOString().slice(0,10),sets:[],cardio:[],memo:''};
+let editingLogId=null;
 
-function allLogs(){return JSON.parse(localStorage.getItem(STORE)||'[]')}
+function uid(){return 'g'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function allLogs(){
+ let logs=JSON.parse(localStorage.getItem(STORE)||'[]'),changed=false;
+ logs.forEach(l=>{if(!l.id){l.id=uid();changed=true}});
+ if(changed)localStorage.setItem(STORE,JSON.stringify(logs));
+ return logs.sort((a,b)=>(b.savedAt||b.date||'').localeCompare(a.savedAt||a.date||''));
+}
+function writeLogs(logs){localStorage.setItem(STORE,JSON.stringify(logs))}
+function getCustomAliases(){return JSON.parse(localStorage.getItem(CUSTOM_ALIASES)||'{}')}
+function allAliases(){return {...aliases,...getCustomAliases()}}
+function resolveAlias(name){const a=allAliases();return a[name]||a[normalizeQ(name)]||name}
+
 function getRecent(){return JSON.parse(localStorage.getItem(RECENT)||'[]')}
 function saveRecent(name){
  let r=getRecent().filter(x=>x!==name); r.unshift(name); r=r.slice(0,8);
@@ -303,13 +355,14 @@ function renderRecent(){
  recentChips.innerHTML=r.map(x=>`<button class="chip ${selected===x?'active':''}" onclick="selectExercise('${x}')">${x}</button>`).join('');
 }
 function selectExercise(name){
+ name=resolveAlias(name);
  if(name.startsWith('エアロバイク')){cardioType.selectedIndex=0; window.scrollTo({top:document.body.scrollHeight/2,behavior:'smooth'});return}
  selected=name; selectedExercise.textContent=name; exerciseSearch.value=name; suggestions.classList.add('hidden');
  loadPrevious(name); renderRecent();
 }
 function loadPrevious(name){
  previousSets=[]; const logs=allLogs();
- for(const log of logs){const arr=(log.sets||[]).filter(s=>s.exercise===name); if(arr.length){previousSets=arr;break;}}
+ for(const log of logs){const arr=(log.sets||[]).filter(s=>resolveAlias(s.exercise)===name); if(arr.length){previousSets=arr;break;}}
  if(previousSets.length){
   previousBox.textContent=previousSets.map(s=>`${s.kg}kg×${s.reps}`).join(' / ');
   const last=previousSets[previousSets.length-1]; kg.value=last.kg; reps.value=last.reps;
@@ -322,7 +375,8 @@ function findMatches(q){
  const n=normalizeQ(raw);
  if(!n) return [];
  const out=[];
- const aliasTarget=aliases[raw]||aliases[n];
+ const amap=allAliases();
+ const aliasTarget=amap[raw]||amap[n];
  if(aliasTarget) out.push({label:aliasTarget,type:'strength'});
 
  for(const item of exerciseDB){
@@ -339,6 +393,22 @@ function findMatches(q){
  const seen=new Set();
  return out.filter(x=>{const k=x.type+'|'+x.label;if(seen.has(k))return false;seen.add(k);return true}).slice(0,12);
 }
+function renderAliases(){
+ const custom=getCustomAliases();
+ const entries=Object.entries(custom);
+ aliasList.innerHTML=entries.length?entries.map(([a,b])=>`<div class="aliasRow"><span>${escapeHtml(a)}</span><span class="aliasArrow">→</span><b>${escapeHtml(b)}</b><button class="red" style="padding:7px 9px" onclick="deleteCustomAlias('${encodeURIComponent(a)}')">×</button></div>`).join(''):'<span class="small">追加した言い換えはまだありません</span>';
+ exerciseNames.innerHTML=exercises.map(x=>`<option value="${escapeHtml(x)}"></option>`).join('');
+}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function addCustomAlias(){
+ const a=aliasFrom.value.trim(),b=aliasTo.value.trim();
+ if(!a||!b){alert('呼び方と正式名を入れてください');return}
+ const match=exercises.find(x=>normalizeQ(x)===normalizeQ(b))||b;
+ if(!exercises.includes(match)){alert('正式名は種目リストから選んでください');return}
+ const m=getCustomAliases();m[a]=match;m[normalizeQ(a)]=match;localStorage.setItem(CUSTOM_ALIASES,JSON.stringify(m));aliasFrom.value='';aliasTo.value='';renderAliases();alert(`${a} → ${match} を登録しました`)
+}
+function deleteCustomAlias(enc){const a=decodeURIComponent(enc),m=getCustomAliases(),n=normalizeQ(a);delete m[a];delete m[n];localStorage.setItem(CUSTOM_ALIASES,JSON.stringify(m));renderAliases()}
+
 exerciseSearch.addEventListener('input',()=>{
  const q=exerciseSearch.value.trim();
  if(!q){suggestions.classList.add('hidden');return}
@@ -383,11 +453,11 @@ function bump(id,d){const el=document.getElementById(id);el.value=Math.max(0,(pa
 function addSet(){
  if(!selected){alert('種目を選んでください');return}
  const k=parseFloat(kg.value),r=parseInt(reps.value); if(isNaN(k)||isNaN(r)){alert('重量と回数を入れてください');return}
- current.sets.push({exercise:selected,kg:k,reps:r}); saveRecent(selected); render();
+ current.sets.push({exercise:selected,kg:k,reps:r}); saveRecent(selected); render();saveDraft(false);
 }
 function setMinutes(m){cardioMin.value=m}
-function addCardio(){const opt=cardioType.options[cardioType.selectedIndex],min=parseInt(cardioMin.value);if(!min){alert('時間を入れてください');return}current.cardio.push({name:opt.text,met:parseFloat(opt.value),minutes:min});render()}
-function removeSet(i){current.sets.splice(i,1);render()} function removeCardio(i){current.cardio.splice(i,1);render()}
+function addCardio(){const opt=cardioType.options[cardioType.selectedIndex],min=parseInt(cardioMin.value);if(!min){alert('時間を入れてください');return}current.cardio.push({name:opt.text,met:parseFloat(opt.value),minutes:min});render();saveDraft(false)}
+function removeSet(i){current.sets.splice(i,1);render();saveDraft(false)} function removeCardio(i){current.cardio.splice(i,1);render();saveDraft(false)}
 function kcal(met,kg,min){return met*3.5*kg/200*min}
 function estimate(){const wt=parseFloat(weight.value)||0,met=parseFloat(intensity.value)||5;const sm=Math.max(0,Math.round(current.sets.length*3.5));const cm=current.cardio.reduce((a,c)=>a+c.minutes,0);let total=wt?kcal(met,wt,sm):0;for(const c of current.cardio)total+=wt?kcal(c.met,wt,c.minutes):0;return{total:Math.round(total),minutes:sm+cm}}
 function render(){
@@ -398,19 +468,71 @@ function render(){
  cardioList.innerHTML=current.cardio.map((c,i)=>`<div class="exercise"><b>${c.name}</b> ${c.minutes}分 <button class="red" style="float:right;padding:8px 10px" onclick="removeCardio(${i})">削除</button></div>`).join('');
  const e=estimate();sumSets.textContent=current.sets.length;sumMin.textContent=e.minutes;sumKcal.textContent=e.total;
 }
+function draftPayload(){
+ return {...JSON.parse(JSON.stringify(current)),memo:memo.value.trim(),weight:weight.value,intensity:intensity.value,draftSavedAt:new Date().toISOString()}
+}
+function saveDraft(showMsg=true){
+ if(!current.sets.length&&!current.cardio.length&&!memo.value.trim()){if(showMsg)alert('一時保存する記録がありません');return}
+ localStorage.setItem(DRAFT,JSON.stringify(draftPayload()));showDraftNotice();if(showMsg)alert('一時保存しました')
+}
+function showDraftNotice(){
+ const d=JSON.parse(localStorage.getItem(DRAFT)||'null');
+ if(!d){draftNotice.classList.add('hidden');return}
+ draftNotice.classList.remove('hidden');draftTime.textContent=`${d.date} / 最終保存 ${new Date(d.draftSavedAt||Date.now()).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}`
+}
+function resumeDraft(){
+ const d=JSON.parse(localStorage.getItem(DRAFT)||'null');if(!d)return;
+ current={date:d.date||new Date().toISOString().slice(0,10),sets:d.sets||[],cardio:d.cardio||[],memo:d.memo||''};
+ memo.value=d.memo||'';if(d.weight)weight.value=d.weight;if(d.intensity)intensity.value=d.intensity;render();draftNotice.classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'})
+}
+function discardDraft(){if(confirm('一時保存データを破棄しますか？')){localStorage.removeItem(DRAFT);showDraftNotice()}}
 function saveProfile(){localStorage.setItem(PROFILE,JSON.stringify({weight:weight.value,intensity:intensity.value}));alert('保存しました')}
 function finishSession(){
  if(!current.sets.length&&!current.cardio.length){alert('記録がありません');return}
- const e=estimate(),wt=parseFloat(weight.value)||0;current.memo=memo.value.trim();current.weight=wt;current.kcal=e.total;current.minutes=e.minutes;current.savedAt=new Date().toISOString();
- const logs=allLogs();logs.unshift(JSON.parse(JSON.stringify(current)));localStorage.setItem(STORE,JSON.stringify(logs));saveProfile();
- alert('保存しました');current={date:new Date().toISOString().slice(0,10),sets:[],cardio:[],memo:''};memo.value='';render();
+ const e=estimate(),wt=parseFloat(weight.value)||0;
+ current.id=uid();current.memo=memo.value.trim();current.weight=wt;current.kcal=e.total;current.minutes=e.minutes;current.savedAt=new Date().toISOString();
+ const logs=allLogs();logs.unshift(JSON.parse(JSON.stringify(current)));writeLogs(logs);saveProfile();localStorage.removeItem(DRAFT);
+ alert('保存しました');current={date:new Date().toISOString().slice(0,10),sets:[],cardio:[],memo:''};memo.value='';render();showDraftNotice();
+}
+function groupedLogs(){
+ const groups={};for(const l of allLogs())(groups[l.date]??=[]).push(l);return groups
 }
 function renderHistory(){
- const logs=allLogs(); if(!logs.length){historyList.innerHTML='<span class="small">まだ履歴なし</span>';return}
- historyList.innerHTML=logs.map(l=>`<div class="exercise"><div class="name">${l.date}</div><div>${[...new Set((l.sets||[]).map(s=>s.exercise))].join(' / ')}</div><div class="small">${l.minutes||0}分・${l.kcal||0}kcal</div></div>`).join('');
+ const groups=groupedLogs(),dates=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+ if(!dates.length){historyList.innerHTML='<span class="small">まだ履歴なし</span>';return}
+ historyList.innerHTML=dates.map((date,di)=>{
+   const logs=groups[date],sets=logs.reduce((n,l)=>n+(l.sets||[]).length,0),mins=logs.reduce((n,l)=>n+(l.minutes||0),0),kcal=logs.reduce((n,l)=>n+(l.kcal||0),0);
+   const names=[...new Set(logs.flatMap(l=>(l.sets||[]).map(s=>resolveAlias(s.exercise))))];
+   return `<div class="historyDay"><button class="historyHead" onclick="toggleDay('${date}')"><span><b>${date}</b><div class="small">${sets}セット・${mins}分・${kcal}kcal</div></span><span>▼</span></button><div id="day-${date}" class="historyBody hidden"><div class="small" style="padding:8px 0">${escapeHtml(names.join(' / ')||'有酸素のみ')}</div>${logs.map((l,idx)=>renderHistorySession(l,idx+1,logs.length)).join('')}</div></div>`
+ }).join('')
 }
-function showTab(t){todayTab.classList.toggle('hidden',t!=='today');historyTab.classList.toggle('hidden',t!=='history');if(t==='history')renderHistory()}
-(function load(){const p=JSON.parse(localStorage.getItem(PROFILE)||'{}');if(p.weight)weight.value=p.weight;if(p.intensity)intensity.value=p.intensity;renderRecent();render();})();
+function renderHistorySession(l,num,total){
+ const grouped={};(l.sets||[]).forEach(s=>(grouped[resolveAlias(s.exercise)]??=[]).push(s));
+ const setHtml=Object.entries(grouped).map(([name,arr])=>`<div class="detailExercise"><b>${escapeHtml(name)}</b><div class="detailSets">${arr.map(s=>`${s.kg}kg × ${s.reps}`).join(' / ')}</div></div>`).join('');
+ const cardio=(l.cardio||[]).map(c=>`<div class="detailExercise"><b>${escapeHtml(c.name)}</b><div class="detailSets">${c.minutes}分</div></div>`).join('');
+ return `<div class="historySession">${total>1?`<span class="badge">記録 ${num}</span>`:''}${setHtml}${cardio}${l.memo?`<div class="small" style="margin-top:8px">メモ：${escapeHtml(l.memo)}</div>`:''}<div class="rowBtns"><button class="soft" onclick="editHistory('${l.id}')">修正</button><button class="red" onclick="deleteHistory('${l.id}')">削除</button></div></div>`
+}
+function toggleDay(date){document.getElementById('day-'+date).classList.toggle('hidden')}
+function editHistory(id){
+ const l=allLogs().find(x=>x.id===id);if(!l)return;editingLogId=id;historyMain.classList.add('hidden');editHistoryCard.classList.remove('hidden');editHistoryDate.textContent=l.date;
+ editSetsList.innerHTML=(l.sets||[]).map((s,i)=>`<div class="editSetRow"><select data-set-ex="${i}">${exercises.map(x=>`<option ${resolveAlias(s.exercise)===x?'selected':''}>${escapeHtml(x)}</option>`).join('')}</select><input data-set-kg="${i}" type="number" inputmode="decimal" value="${s.kg}"><input data-set-reps="${i}" type="number" inputmode="numeric" value="${s.reps}"><button class="red" onclick="removeEditSet(${i})">×</button></div>`).join('')||'<span class="small">筋トレ記録なし</span>';
+ editCardioList.innerHTML=(l.cardio||[]).map((c,i)=>`<div class="editSetRow"><input data-cardio-name="${i}" value="${escapeHtml(c.name)}"><input data-cardio-min="${i}" type="number" value="${c.minutes}"><span class="small">分</span><button class="red" onclick="removeEditCardio(${i})">×</button></div>`).join('')||'<span class="small">有酸素記録なし</span>';
+ editMemo.value=l.memo||'';window.scrollTo({top:0,behavior:'smooth'})
+}
+function collectEdit(){
+ const l=allLogs().find(x=>x.id===editingLogId);if(!l)return null;
+ const sets=[];document.querySelectorAll('[data-set-ex]').forEach(el=>{const i=el.dataset.setEx,kgEl=document.querySelector(`[data-set-kg="${i}"]`),rEl=document.querySelector(`[data-set-reps="${i}"]`);if(kgEl&&rEl)sets.push({exercise:el.value,kg:parseFloat(kgEl.value)||0,reps:parseInt(rEl.value)||0})});
+ const cardio=[];document.querySelectorAll('[data-cardio-name]').forEach(el=>{const i=el.dataset.cardioName,m=document.querySelector(`[data-cardio-min="${i}"]`);if(m)cardio.push({name:el.value,met:(l.cardio?.[i]?.met)||5,minutes:parseInt(m.value)||0})});
+ return {...l,sets,cardio,memo:editMemo.value.trim(),editedAt:new Date().toISOString()}
+}
+function removeEditSet(i){const l=collectEdit();if(!l)return;l.sets.splice(i,1);tempReplaceAndEdit(l)}
+function removeEditCardio(i){const l=collectEdit();if(!l)return;l.cardio.splice(i,1);tempReplaceAndEdit(l)}
+function tempReplaceAndEdit(l){const logs=allLogs().map(x=>x.id===l.id?l:x);writeLogs(logs);editHistory(l.id)}
+function saveHistoryEdit(){const l=collectEdit();if(!l)return;const wt=l.weight||parseFloat(weight.value)||0,met=parseFloat(intensity.value)||5,sm=Math.round(l.sets.length*3.5),cm=l.cardio.reduce((a,c)=>a+(c.minutes||0),0);let total=wt?kcal(met,wt,sm):0;for(const c of l.cardio)total+=wt?kcal(c.met||5,wt,c.minutes||0):0;l.minutes=sm+cm;l.kcal=Math.round(total);writeLogs(allLogs().map(x=>x.id===l.id?l:x));cancelHistoryEdit();renderHistory();alert('修正しました')}
+function cancelHistoryEdit(){editingLogId=null;editHistoryCard.classList.add('hidden');historyMain.classList.remove('hidden')}
+function deleteHistory(id){if(!confirm('この保存記録を削除しますか？'))return;writeLogs(allLogs().filter(x=>x.id!==id));renderHistory()}
+function showTab(t){todayTab.classList.toggle('hidden',t!=='today');historyTab.classList.toggle('hidden',t!=='history');if(t==='history'){cancelHistoryEdit();renderHistory()}else cancelHistoryEdit()}
+(function load(){const p=JSON.parse(localStorage.getItem(PROFILE)||'{}');if(p.weight)weight.value=p.weight;if(p.intensity)intensity.value=p.intensity;renderRecent();render();renderAliases();showDraftNotice();memo.addEventListener('input',()=>{if(current.sets.length||current.cardio.length)saveDraft(false)});})();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 </script>
 </body>
