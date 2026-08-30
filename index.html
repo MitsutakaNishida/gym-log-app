@@ -28,14 +28,14 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 .historyBody{padding:0 14px 14px;background:#fbfcfe}.historySession{border-top:1px solid var(--line);padding:12px 0}.historySession:first-child{border-top:0}
 .detailExercise{margin:8px 0}.detailSets{color:var(--muted);font-size:14px;margin-top:3px}
 .editSetRow{display:grid;grid-template-columns:1.5fr .7fr .7fr auto;gap:6px;align-items:center;margin:7px 0}.editSetRow input,.editSetRow select{font-size:15px;padding:10px}
-.aliasRow{display:grid;grid-template-columns:1fr auto 1fr auto;gap:6px;align-items:center;margin-top:8px}.aliasArrow{text-align:center;color:var(--muted);font-weight:800}
+.aliasRow{display:grid;grid-template-columns:1fr auto 1fr auto;gap:6px;align-items:center;margin-top:8px}.aliasArrow{text-align:center;color:var(--muted);font-weight:800}.editAddPanel{margin-top:12px;padding:14px;border:1px solid #d7e0ec;border-radius:18px;background:#f8fbff}.editSuggest{border:1px solid #ccd4e0;border-radius:14px;overflow:hidden;background:#fff;margin-top:6px}.editSuggest button{display:block;width:100%;text-align:left;background:#fff;border:0;border-bottom:1px solid #edf1f6;padding:12px 14px;font-size:16px}.editSuggest button:last-child{border-bottom:0}.editSelected{font-size:20px;font-weight:800;margin:8px 0;color:#17233d}
 .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef3ff;color:#244d9b;font-size:12px;font-weight:700}
 
 </style>
 </head>
 <body>
 <div class="wrap">
-<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.7</span></h1>
+<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.8</span></h1>
 <p class="sub">途中保存・あとから編集対応。種目名の言い換えも使えます。</p>
 
 <div class="toprow">
@@ -144,7 +144,36 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 <div class="section-title">保存済み記録を修正</div>
 <div id="editHistoryDate" class="small"></div>
 <div id="editSetsList"></div>
-<button class="soft" style="width:100%;margin-top:10px" onclick="addEditSet()">＋ 筋トレセットを追加</button>
+<button class="soft" style="width:100%;margin-top:10px" onclick="toggleEditAddPanel(true)">＋ 筋トレセットを追加</button>
+
+<div id="editAddPanel" class="editAddPanel hidden">
+<div class="section-title" style="font-size:17px">種目を追加</div>
+<label>最近使った種目</label>
+<div id="editRecentChips" class="chips"></div>
+
+<label>検索</label>
+<input id="editExerciseSearch" placeholder="例：フレンチプレス、アームカール" autocomplete="off">
+<div id="editSuggestions" class="editSuggest hidden"></div>
+
+<div class="small" style="margin-top:10px">選択中</div>
+<div id="editSelectedExercise" class="editSelected">未選択</div>
+
+<div class="grid2" style="margin-top:8px">
+<div><label>前回</label><div id="editPreviousBox" class="small" style="padding:14px 4px">—</div></div>
+<div><label>前回コピー</label><button class="soft" style="width:100%" onclick="copyEditPrevious()">前回値を入れる</button></div>
+</div>
+
+<div class="grid2" style="margin-top:8px">
+<div><label>重量 kg</label><input id="editKg" type="number" inputmode="decimal"><div class="quick"><button onclick="editBump('editKg',-5)">-5</button><button onclick="editBump('editKg',-2.5)">-2.5</button><button onclick="editBump('editKg',2.5)">+2.5</button><button onclick="editBump('editKg',5)">+5</button></div></div>
+<div><label>回数</label><input id="editReps" type="number" inputmode="numeric"><div class="quick"><button onclick="editBump('editReps',-2)">-2</button><button onclick="editBump('editReps',-1)">-1</button><button onclick="editBump('editReps',1)">+1</button><button onclick="editBump('editReps',2)">+2</button></div></div>
+</div>
+
+<div class="rowBtns">
+<button class="soft" onclick="toggleEditAddPanel(false)">閉じる</button>
+<button class="primary" onclick="commitEditAddedSet()">＋ このセットを追加</button>
+</div>
+</div>
+
 <div class="section-title" style="font-size:17px;margin-top:14px">有酸素・その他</div><div id="editCardioList"></div>
 <button class="soft" style="width:100%;margin-top:10px" onclick="addEditCardio()">＋ 有酸素・その他を追加</button>
 <label>メモ</label><textarea id="editMemo"></textarea>
@@ -333,7 +362,7 @@ const categoryTerms=['脚','胸','背中','肩','腕','腹','尻','自重','ダ�
 let selected='';
 let previousSets=[];
 let current={date:new Date().toISOString().slice(0,10),sets:[],cardio:[],memo:''};
-let editingLogId=null,editWorking=null;
+let editingLogId=null,editWorking=null,editSelected='',editPreviousSets=[];
 
 function uid(){return 'g'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 function allLogs(){
@@ -418,6 +447,16 @@ exerciseSearch.addEventListener('input',()=>{
  suggestions.innerHTML=hits.map(x=>`<button onclick="${x.type==='cardio'?`selectCardioActivity('${x.label}')`:`selectExercise('${x.label}')`}">${x.label}${x.type==='cardio'?'　<span style="color:#6d7687">有酸素</span>':''}</button>`).join('');
  suggestions.classList.toggle('hidden',!hits.length);
 });
+
+document.addEventListener('input',e=>{
+ if(e.target?.id!=='editExerciseSearch')return;
+ const q=e.target.value.trim();
+ if(!q){editSuggestions.classList.add('hidden');return}
+ const hits=findMatches(q).filter(x=>x.type==='strength');
+ editSuggestions.innerHTML=hits.map(x=>`<button onclick="selectEditExercise('${x.label.replace(/'/g,"\\'")}')">${escapeHtml(x.label)}</button>`).join('');
+ editSuggestions.classList.toggle('hidden',!hits.length);
+});
+
 function selectCardioActivity(name){
  exerciseSearch.value=name;
  suggestions.classList.add('hidden');
@@ -528,7 +567,73 @@ function renderHistoryEditor(){
  editSetsList.innerHTML=(editWorking.sets||[]).map((s,i)=>`<div class="editSetRow"><select data-set-ex="${i}" onchange="syncEditWorking()"><option value="" ${!s.exercise?'selected':''}>種目を選択</option>${exercises.map(x=>`<option value="${escapeHtml(x)}" ${resolveAlias(s.exercise)===x?'selected':''}>${escapeHtml(x)}</option>`).join('')}</select><input data-set-kg="${i}" type="number" inputmode="decimal" placeholder="kg" value="${s.kg??''}" onchange="syncEditWorking()"><input data-set-reps="${i}" type="number" inputmode="numeric" placeholder="回" value="${s.reps??''}" onchange="syncEditWorking()"><button class="red" onclick="removeEditSet(${i})">×</button></div>`).join('')||'<span class="small">筋トレ記録なし</span>';
  editCardioList.innerHTML=(editWorking.cardio||[]).map((c,i)=>`<div class="editSetRow"><select data-cardio-name="${i}" onchange="syncEditWorking()"><option value="" ${!c.name?'selected':''}>種目を選択</option>${cardioActivities.map(a=>`<option value="${escapeHtml(a.label)}" ${c.name===a.label?'selected':''}>${escapeHtml(a.label)}</option>`).join('')}</select><input data-cardio-min="${i}" type="number" inputmode="numeric" placeholder="分" value="${c.minutes??''}" onchange="syncEditWorking()"><span class="small">分</span><button class="red" onclick="removeEditCardio(${i})">×</button></div>`).join('')||'<span class="small">有酸素記録なし</span>';
  editMemo.value=editWorking.memo||'';
+ renderEditRecent();
 }
+
+function toggleEditAddPanel(show){
+ if(!window.editAddPanel)return;
+ editAddPanel.classList.toggle('hidden',!show);
+ if(show){
+  editSelected='';
+  editSelectedExercise.textContent='未選択';
+  editExerciseSearch.value='';
+  editKg.value='';
+  editReps.value='';
+  editPreviousBox.textContent='—';
+  editSuggestions.classList.add('hidden');
+  renderEditRecent();
+  setTimeout(()=>editExerciseSearch.focus(),80);
+ }
+}
+function renderEditRecent(){
+ if(!window.editRecentChips)return;
+ let r=getRecent(); if(!r.length)r=['レッグプレス','ショルダープレス','レッグレイズ','ダンベルカール'];
+ editRecentChips.innerHTML=r.filter(x=>!x.startsWith('エアロバイク')).map(x=>`<button class="chip ${editSelected===x?'active':''}" onclick="selectEditExercise('${x.replace(/'/g,"\\'")}')">${escapeHtml(x)}</button>`).join('');
+}
+function selectEditExercise(name){
+ name=resolveAlias(name);
+ editSelected=name;
+ editSelectedExercise.textContent=name;
+ editExerciseSearch.value=name;
+ editSuggestions.classList.add('hidden');
+ loadEditPrevious(name);
+ renderEditRecent();
+}
+function loadEditPrevious(name){
+ editPreviousSets=[];
+ for(const log of allLogs()){
+  const arr=(log.sets||[]).filter(s=>resolveAlias(s.exercise)===name);
+  if(arr.length){editPreviousSets=arr;break}
+ }
+ if(editPreviousSets.length){
+  editPreviousBox.textContent=editPreviousSets.map(s=>`${s.kg}kg×${s.reps}`).join(' / ');
+  const last=editPreviousSets[editPreviousSets.length-1];
+  editKg.value=last.kg; editReps.value=last.reps;
+ }else{
+  editPreviousBox.textContent='記録なし';editKg.value='';editReps.value='';
+ }
+}
+function copyEditPrevious(){
+ if(!editPreviousSets.length)return;
+ const last=editPreviousSets[editPreviousSets.length-1];
+ editKg.value=last.kg;editReps.value=last.reps;
+}
+function editBump(id,d){
+ const el=document.getElementById(id);
+ el.value=Math.max(0,(parseFloat(el.value)||0)+d);
+}
+function commitEditAddedSet(){
+ if(!editWorking)return;
+ if(!editSelected){alert('種目を選んでください');return}
+ const k=parseFloat(editKg.value),r=parseInt(editReps.value);
+ if(isNaN(k)||isNaN(r)){alert('重量と回数を入れてください');return}
+ syncEditWorking();
+ editWorking.sets.push({exercise:editSelected,kg:k,reps:r});
+ saveRecent(editSelected);
+ renderHistoryEditor();
+ toggleEditAddPanel(false);
+}
+
 function syncEditWorking(){
  if(!editWorking)return;
  const sets=[];
@@ -537,12 +642,7 @@ function syncEditWorking(){
  document.querySelectorAll('[data-cardio-name]').forEach(el=>{const i=el.dataset.cardioName,m=document.querySelector(`[data-cardio-min="${i}"]`);if(m){const act=cardioActivities.find(a=>a.label===el.value);cardio.push({name:el.value,met:act?.met||(editWorking.cardio?.[i]?.met)||5,minutes:m.value===''?'':parseInt(m.value)})}});
  editWorking.sets=sets;editWorking.cardio=cardio;editWorking.memo=editMemo.value.trim();
 }
-function addEditSet(){
- syncEditWorking();if(!editWorking)return;
- editWorking.sets.push({exercise:'',kg:'',reps:''});
- renderHistoryEditor();
- setTimeout(()=>editSetsList.lastElementChild?.scrollIntoView({behavior:'smooth',block:'center'}),0)
-}
+function addEditSet(){toggleEditAddPanel(true)}
 function addEditCardio(){
  syncEditWorking();if(!editWorking)return;
  editWorking.cardio.push({name:'',met:5,minutes:''});
@@ -563,7 +663,7 @@ function saveHistoryEdit(){
  l.minutes=sm+cm;l.kcal=Math.round(total);
  writeLogs(allLogs().map(x=>x.id===l.id?l:x));cancelHistoryEdit();renderHistory();alert('修正しました')
 }
-function cancelHistoryEdit(){editingLogId=null;editWorking=null;editHistoryCard.classList.add('hidden');historyMain.classList.remove('hidden')}
+function cancelHistoryEdit(){editingLogId=null;editWorking=null;editSelected='';if(window.editAddPanel)editAddPanel.classList.add('hidden');editHistoryCard.classList.add('hidden');historyMain.classList.remove('hidden')}
 function deleteHistory(id){if(!confirm('この保存記録を削除しますか？'))return;writeLogs(allLogs().filter(x=>x.id!==id));renderHistory()}
 function showTab(t){todayTab.classList.toggle('hidden',t!=='today');historyTab.classList.toggle('hidden',t!=='history');if(t==='history'){cancelHistoryEdit();renderHistory()}else cancelHistoryEdit()}
 (function load(){const p=JSON.parse(localStorage.getItem(PROFILE)||'{}');if(p.weight)weight.value=p.weight;if(p.intensity)intensity.value=p.intensity;renderRecent();render();renderAliases();showDraftNotice();memo.addEventListener('input',()=>{if(current.sets.length||current.cardio.length)saveDraft(false)});})();
