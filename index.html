@@ -25,7 +25,7 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 </head>
 <body>
 <div class="wrap">
-<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.2</span></h1>
+<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.4</span></h1>
 <p class="sub">できるだけ打たない。最近使った種目はタップ、なければ検索か音声。</p>
 
 <div class="toprow">
@@ -124,7 +124,170 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 const STORE='gym_log_beta_v1';
 const PROFILE='gym_log_profile_v1';
 const RECENT='gym_log_recent_exercises_v1';
-const exercises=['レッグプレス','ショルダープレス','チェストプレス','ラットプルダウン','シーテッドロー','レッグカール','レッグエクステンション','カーフレイズ','アームカール','トライセプス','レッグレイズ','グルートマシン','ベンチプレス','スクワット','デッドリフト','チンニング','その他'];
+const exerciseDB=[
+{n:'レッグプレス',cat:['脚','マシン']},
+{n:'リニアレッグプレス',cat:['脚','マシン']},
+{n:'ハックスクワット',cat:['脚','マシン']},
+{n:'ベルトスクワット',cat:['脚','マシン']},
+{n:'レッグエクステンション',cat:['脚','マシン']},
+{n:'レッグカール',cat:['脚','マシン']},
+{n:'シーテッドレッグカール',cat:['脚','マシン']},
+{n:'ライイングレッグカール',cat:['脚','マシン']},
+{n:'ヒップアブダクション',cat:['脚','尻','マシン']},
+{n:'ヒップアダクション',cat:['脚','内もも','マシン']},
+{n:'インナーサイ',cat:['脚','内もも','マシン']},
+{n:'アウターサイ',cat:['脚','尻','マシン']},
+{n:'グルートマシン',cat:['尻','マシン']},
+{n:'グルートエクステンション',cat:['尻','マシン']},
+{n:'カーフレイズ',cat:['脚','ふくらはぎ']},
+{n:'シーテッドカーフレイズ',cat:['脚','ふくらはぎ','マシン']},
+{n:'スタンディングカーフレイズ',cat:['脚','ふくらはぎ']},
+
+{n:'スクワット',cat:['脚','バーベル']},
+{n:'フロントスクワット',cat:['脚','バーベル']},
+{n:'ゴブレットスクワット',cat:['脚','ダンベル']},
+{n:'ダンベルスクワット',cat:['脚','ダンベル']},
+{n:'ブルガリアンスクワット',cat:['脚','尻','自重','ダンベル']},
+{n:'ランジ',cat:['脚','尻','自重']},
+{n:'ウォーキングランジ',cat:['脚','尻','自重','ダンベル']},
+{n:'リバースランジ',cat:['脚','尻','自重','ダンベル']},
+{n:'サイドランジ',cat:['脚','尻','自重']},
+{n:'ステップアップ',cat:['脚','尻','自重','ダンベル']},
+{n:'ヒップスラスト',cat:['尻','バーベル']},
+{n:'グルートブリッジ',cat:['尻','自重']},
+{n:'ルーマニアンデッドリフト',cat:['脚','尻','背中','バーベル','ダンベル']},
+{n:'デッドリフト',cat:['背中','脚','バーベル']},
+{n:'ダンベルデッドリフト',cat:['脚','背中','ダンベル']},
+{n:'スミスマシンスクワット',cat:['脚','スミス','マシン']},
+{n:'スミスマシンランジ',cat:['脚','尻','スミス','マシン']},
+
+{n:'チェストプレス',cat:['胸','マシン']},
+{n:'インクラインチェストプレス',cat:['胸','マシン']},
+{n:'デクラインチェストプレス',cat:['胸','マシン']},
+{n:'ペックフライ',cat:['胸','マシン']},
+{n:'ペクトラルフライ',cat:['胸','マシン']},
+{n:'ベンチプレス',cat:['胸','バーベル']},
+{n:'インクラインベンチプレス',cat:['胸','バーベル']},
+{n:'デクラインベンチプレス',cat:['胸','バーベル']},
+{n:'ダンベルプレス',cat:['胸','ダンベル']},
+{n:'インクラインダンベルプレス',cat:['胸','ダンベル']},
+{n:'デクラインダンベルプレス',cat:['胸','ダンベル']},
+{n:'ダンベルフライ',cat:['胸','ダンベル']},
+{n:'インクラインダンベルフライ',cat:['胸','ダンベル']},
+{n:'プッシュアップ',cat:['胸','腕','自重']},
+{n:'ナロープッシュアップ',cat:['胸','腕','三頭','自重']},
+{n:'インクラインプッシュアップ',cat:['胸','自重']},
+{n:'デクラインプッシュアップ',cat:['胸','自重']},
+{n:'ディップス',cat:['胸','三頭','自重']},
+{n:'アシストディップス',cat:['胸','三頭','マシン']},
+{n:'ケーブルクロスオーバー',cat:['胸','ケーブル']},
+{n:'ケーブルフライ',cat:['胸','ケーブル']},
+{n:'スミスマシンベンチプレス',cat:['胸','スミス','マシン']},
+
+{n:'ラットプルダウン',cat:['背中','マシン']},
+{n:'ワイドラットプルダウン',cat:['背中','マシン']},
+{n:'フロントラットプルダウン',cat:['背中','マシン']},
+{n:'シーテッドロー',cat:['背中','マシン']},
+{n:'ローロー',cat:['背中','マシン']},
+{n:'Tバーロー',cat:['背中','バーベル','マシン']},
+{n:'DYロー',cat:['背中','マシン']},
+{n:'ワンハンドダンベルロー',cat:['背中','ダンベル']},
+{n:'ダンベルロー',cat:['背中','ダンベル']},
+{n:'ベントオーバーロー',cat:['背中','バーベル']},
+{n:'ペンドレイロー',cat:['背中','バーベル']},
+{n:'ケーブルロー',cat:['背中','ケーブル']},
+{n:'フェイスプル',cat:['背中','肩','ケーブル']},
+{n:'チンニング',cat:['背中','自重']},
+{n:'プルアップ',cat:['背中','自重']},
+{n:'アシストチンニング',cat:['背中','マシン']},
+{n:'バックエクステンション',cat:['背中','自重','マシン']},
+
+{n:'ショルダープレス',cat:['肩','マシン']},
+{n:'ダンベルショルダープレス',cat:['肩','ダンベル']},
+{n:'アーノルドプレス',cat:['肩','ダンベル']},
+{n:'ミリタリープレス',cat:['肩','バーベル']},
+{n:'オーバーヘッドプレス',cat:['肩','バーベル']},
+{n:'サイドレイズ',cat:['肩','ダンベル']},
+{n:'ダンベルサイドレイズ',cat:['肩','ダンベル']},
+{n:'ケーブルサイドレイズ',cat:['肩','ケーブル']},
+{n:'フロントレイズ',cat:['肩','ダンベル']},
+{n:'ダンベルフロントレイズ',cat:['肩','ダンベル']},
+{n:'リアレイズ',cat:['肩','ダンベル']},
+{n:'リアデルト',cat:['肩','マシン']},
+{n:'リアデルトロー',cat:['肩','背中','マシン']},
+{n:'アップライトロー',cat:['肩','バーベル','ケーブル']},
+{n:'ダンベルシュラッグ',cat:['肩','僧帽筋','ダンベル']},
+{n:'バーベルシュラッグ',cat:['肩','僧帽筋','バーベル']},
+
+{n:'アームカール',cat:['腕','二頭','マシン']},
+{n:'バイセップカール',cat:['腕','二頭','マシン']},
+{n:'プリーチャーカール',cat:['腕','二頭','マシン','バーベル']},
+{n:'ダンベルカール',cat:['腕','二頭','ダンベル']},
+{n:'ハンマーカール',cat:['腕','二頭','ダンベル']},
+{n:'インクラインダンベルカール',cat:['腕','二頭','ダンベル']},
+{n:'コンセントレーションカール',cat:['腕','二頭','ダンベル']},
+{n:'バーベルカール',cat:['腕','二頭','バーベル']},
+{n:'EZバーカール',cat:['腕','二頭','バーベル']},
+{n:'ケーブルカール',cat:['腕','二頭','ケーブル']},
+{n:'トライセプスエクステンション',cat:['腕','三頭','マシン']},
+{n:'ケーブルプレスダウン',cat:['腕','三頭','ケーブル']},
+{n:'ローププレスダウン',cat:['腕','三頭','ケーブル']},
+{n:'オーバーヘッドトライセプスエクステンション',cat:['腕','三頭','ダンベル','ケーブル']},
+{n:'ダンベルキックバック',cat:['腕','三頭','ダンベル']},
+{n:'スカルクラッシャー',cat:['腕','三頭','バーベル']},
+{n:'ナローベンチプレス',cat:['腕','三頭','胸','バーベル']},
+
+{n:'アブドミナル',cat:['腹','マシン']},
+{n:'アブドミナルクランチ',cat:['腹','マシン']},
+{n:'クランチ',cat:['腹','自重']},
+{n:'シットアップ',cat:['腹','自重']},
+{n:'レッグレイズ',cat:['腹','自重']},
+{n:'ハンギングレッグレイズ',cat:['腹','自重']},
+{n:'ニーレイズ',cat:['腹','自重']},
+{n:'プランク',cat:['腹','体幹','自重']},
+{n:'サイドプランク',cat:['腹','体幹','自重']},
+{n:'アブローラー',cat:['腹','体幹','自重']},
+{n:'トーソローテーション',cat:['腹','体幹','マシン']},
+{n:'ロータリートルソー',cat:['腹','体幹','マシン']},
+
+{n:'バーピー',cat:['全身','自重']},
+{n:'マウンテンクライマー',cat:['全身','自重']},
+{n:'ジャンピングスクワット',cat:['脚','全身','自重']},
+{n:'その他',cat:['その他']}
+];
+
+const exercises=exerciseDB.map(x=>x.n);
+
+const cardioActivities=[
+{label:'トレッドミル', aliases:['ランニングマシン','ランニングマシーン','トレッド','treadmill']},
+{label:'クロストレーナー', aliases:['エリプティカル','クロス']},
+{label:'アップライトバイク', aliases:['エアロバイク','バイク','自転車']},
+{label:'リカンベントバイク', aliases:['リカンベント']},
+{label:'ステアクライマー', aliases:['パワーミル','階段','ステップミル']},
+{label:'ローイングマシン', aliases:['ローイング','ローワー']},
+{label:'ウォーキング', aliases:['歩行','歩く']},
+{label:'ランニング', aliases:['ジョギング','走る']},
+{label:'ゴルフ練習場', aliases:['打ちっぱなし','ゴルフ']}
+];
+
+const aliases={
+'プリーチャー':'プリーチャーカール',
+'プリチャー':'プリーチャーカール',
+'アブダクション':'ヒップアブダクション',
+'アダクション':'ヒップアダクション',
+'腹筋':'クランチ',
+'背筋':'バックエクステンション',
+'懸垂':'チンニング',
+'腕立て':'プッシュアップ',
+'腕立て伏せ':'プッシュアップ',
+'ブルガリアン':'ブルガリアンスクワット',
+'三頭':'トライセプスエクステンション',
+'二頭':'ダンベルカール',
+'ロングプル':'シーテッドロー',
+'プーリーロー':'シーテッドロー'
+};
+
+const categoryTerms=['脚','胸','背中','肩','腕','腹','尻','自重','ダンベル','バーベル','ケーブル','マシン','二頭','三頭','体幹','全身'];
 let selected='';
 let previousSets=[];
 let current={date:new Date().toISOString().slice(0,10),sets:[],cardio:[],memo:''};
@@ -153,20 +316,63 @@ function loadPrevious(name){
  } else { previousBox.textContent='記録なし'; kg.value=''; reps.value='';}
 }
 function copyPrevious(){ if(!previousSets.length)return; const last=previousSets[previousSets.length-1];kg.value=last.kg;reps.value=last.reps}
+function normalizeQ(s){return (s||'').toLowerCase().replace(/\s+/g,'').replace(/[・ー\-]/g,'')}
+function findMatches(q){
+ const raw=(q||'').trim();
+ const n=normalizeQ(raw);
+ if(!n) return [];
+ const out=[];
+ const aliasTarget=aliases[raw]||aliases[n];
+ if(aliasTarget) out.push({label:aliasTarget,type:'strength'});
+
+ for(const item of exerciseDB){
+   const nameN=normalizeQ(item.n);
+   const catHit=item.cat.some(c=>normalizeQ(c).includes(n)||n.includes(normalizeQ(c)));
+   if(nameN.includes(n) || n.includes(nameN) || catHit){
+     out.push({label:item.n,type:'strength'});
+   }
+ }
+ for(const c of cardioActivities){
+   const names=[c.label,...c.aliases];
+   if(names.some(a=>normalizeQ(a).includes(n)||n.includes(normalizeQ(a)))) out.push({label:c.label,type:'cardio'});
+ }
+ const seen=new Set();
+ return out.filter(x=>{const k=x.type+'|'+x.label;if(seen.has(k))return false;seen.add(k);return true}).slice(0,12);
+}
 exerciseSearch.addEventListener('input',()=>{
- const q=exerciseSearch.value.trim(); if(!q){suggestions.classList.add('hidden');return}
- const hits=exercises.filter(x=>x.includes(q)).slice(0,6);
- suggestions.innerHTML=hits.map(x=>`<button onclick="selectExercise('${x}')">${x}</button>`).join('');
+ const q=exerciseSearch.value.trim();
+ if(!q){suggestions.classList.add('hidden');return}
+ const hits=findMatches(q);
+ suggestions.innerHTML=hits.map(x=>`<button onclick="${x.type==='cardio'?`selectCardioActivity('${x.label}')`:`selectExercise('${x.label}')`}">${x.label}${x.type==='cardio'?'　<span style="color:#6d7687">有酸素</span>':''}</button>`).join('');
  suggestions.classList.toggle('hidden',!hits.length);
 });
+function selectCardioActivity(name){
+ exerciseSearch.value=name;
+ suggestions.classList.add('hidden');
+ selectedExercise.textContent=name+'（有酸素）';
+ selected='';
+ const labels=[...cardioType.options].map(o=>o.text);
+ let idx=labels.findIndex(x=>x.includes(name));
+ if(idx<0){
+   if(name==='トレッドミル'||name==='ランニング') idx=2;
+   else if(name==='ウォーキング') idx=3;
+   else if(name==='ゴルフ練習場') idx=4;
+   else idx=0;
+ }
+ cardioType.selectedIndex=idx;
+ document.querySelector('#cardioType').scrollIntoView({behavior:'smooth',block:'center'});
+}
 function voiceSearch(){
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(!SR){alert('この環境では音声認識を利用できません');return}
  const r=new SR(); r.lang='ja-JP'; r.interimResults=false; r.maxAlternatives=1;
  r.onresult=e=>{
   const text=e.results[0][0].transcript.trim(); exerciseSearch.value=text;
-  const hit=exercises.find(x=>x===text)||exercises.find(x=>x.includes(text)||text.includes(x));
-  if(hit) selectExercise(hit); else {
+  const hits=findMatches(text);
+  if(hits.length){
+    if(hits[0].type==='cardio') selectCardioActivity(hits[0].label);
+    else selectExercise(hits[0].label);
+  } else {
     const ev=new Event('input'); exerciseSearch.dispatchEvent(ev);
   }
  };
