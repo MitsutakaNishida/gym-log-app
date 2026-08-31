@@ -35,7 +35,7 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 </head>
 <body>
 <div class="wrap">
-<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.8</span></h1>
+<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.9</span></h1>
 <p class="sub">途中保存・あとから編集対応。種目名の言い換えも使えます。</p>
 
 <div class="toprow">
@@ -107,14 +107,7 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 <div class="card">
 <div class="section-title">有酸素・その他</div>
 <div class="grid2">
-<div><label>種目</label><select id="cardioType">
-<option value="7.0">エアロバイク 普通</option>
-<option value="8.5">エアロバイク 強め</option>
-<option value="8.0">ランニング 軽め</option>
-<option value="5.0">ウォーキング 速め</option>
-<option value="4.5">ゴルフ練習場</option>
-<option value="6.0">その他 有酸素</option>
-</select></div>
+<div><label>種目</label><select id="cardioType"></select></div>
 <div><label>時間 分</label><input id="cardioMin" type="number" inputmode="numeric" value="20"></div>
 </div>
 <div class="quick"><button onclick="setMinutes(10)">10分</button><button onclick="setMinutes(20)">20分</button><button onclick="setMinutes(30)">30分</button><button onclick="setMinutes(45)">45分</button></div>
@@ -127,7 +120,7 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 <div class="summary">
 <div class="stat"><span class="small">セット</span><b id="sumSets">0</b></div>
 <div class="stat"><span class="small">運動時間</span><b id="sumMin">0</b><span class="small">分</span></div>
-<div class="stat"><span class="small">推定消費</span><b id="sumKcal">0</b><span class="small">kcal</span></div>
+<div class="stat"><span class="small">推定アクティブ消費</span><b id="sumKcal">0</b><span class="small">kcal</span></div><div class="small" style="grid-column:1/-1;margin-top:4px">筋トレは1セット約45秒の実働換算。有酸素は種目別METから休息分を除いた概算です。</div>
 </div>
 <label>メモ（任意）</label><textarea id="memo" placeholder="空欄でOK"></textarea>
 <div class="rowBtns">
@@ -325,16 +318,38 @@ const exerciseDB=[
 const exercises=exerciseDB.map(x=>x.n);
 
 const cardioActivities=[
-{label:'トレッドミル', aliases:['ランニングマシン','ランニングマシーン','トレッド','treadmill']},
-{label:'クロストレーナー', aliases:['エリプティカル','クロス']},
-{label:'アップライトバイク', aliases:['エアロバイク','バイク','自転車']},
-{label:'リカンベントバイク', aliases:['リカンベント']},
-{label:'ステアクライマー', aliases:['パワーミル','階段','ステップミル']},
-{label:'ローイングマシン', aliases:['ローイング','ローワー']},
-{label:'ウォーキング', aliases:['歩行','歩く']},
-{label:'ランニング', aliases:['ジョギング','走る']},
-{label:'ゴルフ練習場', aliases:['打ちっぱなし','ゴルフ']}
+{label:'エアロバイク 普通',met:5.5,aliases:['エアロバイク','バイク','自転車','アップライトバイク']},
+{label:'エアロバイク 強め',met:8.0,aliases:['バイク強め','エアロバイク強め']},
+{label:'トレッドミル',met:5.0,aliases:['ランニングマシン','ランニングマシーン','トレッド','treadmill']},
+{label:'クロストレーナー',met:5.0,aliases:['エリプティカル','クロス']},
+{label:'アップライトバイク',met:5.5,aliases:['アップライト']},
+{label:'リカンベントバイク',met:5.0,aliases:['リカンベント']},
+{label:'ステアクライマー',met:8.0,aliases:['パワーミル','階段','ステップミル']},
+{label:'ローイングマシン',met:7.0,aliases:['ローイング','ローワー']},
+{label:'ウォーキング',met:3.5,aliases:['歩行','歩く']},
+{label:'ウォーキング 速め',met:4.8,aliases:['早歩き','速歩']},
+{label:'ランニング',met:8.0,aliases:['ジョギング','走る']},
+{label:'ランニング 軽め',met:8.0,aliases:['軽いランニング']},
+{label:'ゴルフ練習場',met:3.0,aliases:['打ちっぱなし','ゴルフ']},
+{label:'その他 有酸素',met:5.0,aliases:['その他有酸素']}
 ];
+
+function populateCardioType(){
+ if(!window.cardioType)return;
+ const keep=cardioType.value;
+ cardioType.innerHTML=cardioActivities.map(a=>`<option value="${a.label}">${a.label}</option>`).join('');
+ if(keep && cardioActivities.some(a=>a.label===keep))cardioType.value=keep;
+}
+function cardioMeta(name){
+ return cardioActivities.find(a=>a.label===name)||null;
+}
+function canonicalCardioName(name){
+ if(!name)return '';
+ const exact=cardioMeta(name);if(exact)return exact.label;
+ const q=norm(name);
+ const hit=cardioActivities.find(a=>norm(a.label)===q||(a.aliases||[]).some(x=>norm(x)===q));
+ return hit?.label||name;
+}
 
 const aliases={
 'プリーチャー':'プリーチャーカール',
@@ -458,19 +473,12 @@ document.addEventListener('input',e=>{
 });
 
 function selectCardioActivity(name){
+ name=canonicalCardioName(name);
  exerciseSearch.value=name;
  suggestions.classList.add('hidden');
  selectedExercise.textContent=name+'（有酸素）';
  selected='';
- const labels=[...cardioType.options].map(o=>o.text);
- let idx=labels.findIndex(x=>x.includes(name));
- if(idx<0){
-   if(name==='トレッドミル'||name==='ランニング') idx=2;
-   else if(name==='ウォーキング') idx=3;
-   else if(name==='ゴルフ練習場') idx=4;
-   else idx=0;
- }
- cardioType.selectedIndex=idx;
+ if(cardioActivities.some(a=>a.label===name))cardioType.value=name;
  document.querySelector('#cardioType').scrollIntoView({behavior:'smooth',block:'center'});
 }
 function voiceSearch(){
@@ -497,10 +505,30 @@ function addSet(){
  current.sets.push({exercise:selected,kg:k,reps:r}); saveRecent(selected); render();saveDraft(false);
 }
 function setMinutes(m){cardioMin.value=m}
-function addCardio(){const opt=cardioType.options[cardioType.selectedIndex],min=parseInt(cardioMin.value);if(!min){alert('時間を入れてください');return}current.cardio.push({name:opt.text,met:parseFloat(opt.value),minutes:min});render();saveDraft(false)}
+function addCardio(){
+ const name=cardioType.value,min=parseInt(cardioMin.value),act=cardioMeta(name);
+ if(!min){alert('時間を入れてください');return}
+ current.cardio.push({name,met:act?.met||5,minutes:min});render();saveDraft(false)
+}
 function removeSet(i){current.sets.splice(i,1);render();saveDraft(false)} function removeCardio(i){current.cardio.splice(i,1);render();saveDraft(false)}
-function kcal(met,kg,min){return met*3.5*kg/200*min}
-function estimate(){const wt=parseFloat(weight.value)||0,met=parseFloat(intensity.value)||5;const sm=Math.max(0,Math.round(current.sets.length*3.5));const cm=current.cardio.reduce((a,c)=>a+c.minutes,0);let total=wt?kcal(met,wt,sm):0;for(const c of current.cardio)total+=wt?kcal(c.met,wt,c.minutes):0;return{total:Math.round(total),minutes:sm+cm}}
+// Active calories: subtract resting 1 MET. Strength uses estimated lifting time only,
+// not the whole rest interval between sets.
+function activeKcal(met,kg,min){return Math.max(0,met-1)*3.5*kg/200*min}
+function strengthActiveMinutes(setCount){return Math.round(setCount*0.75*10)/10}
+function derivedStats(log,profileIntensity){
+ const wt=parseFloat(log.weight)||0;
+ const strengthMet=parseFloat(log.strengthIntensity||log.intensity||profileIntensity)||5;
+ const sm=strengthActiveMinutes((log.sets||[]).length);
+ const cm=(log.cardio||[]).reduce((a,c)=>a+(parseFloat(c.minutes)||0),0);
+ let total=wt?activeKcal(strengthMet,wt,sm):0;
+ for(const c of (log.cardio||[])){
+   const name=canonicalCardioName(c.name);
+   const met=cardioMeta(name)?.met||parseFloat(c.met)||5;
+   total+=wt?activeKcal(met,wt,parseFloat(c.minutes)||0):0;
+ }
+ return{total:Math.round(total),minutes:Math.round((sm+cm)*10)/10,strengthMinutes:sm,cardioMinutes:cm}
+}
+function estimate(){return derivedStats({...current,weight:parseFloat(weight.value)||0,strengthIntensity:parseFloat(intensity.value)||5},parseFloat(intensity.value)||5)}
 function render(){
  if(!current.sets.length)setsList.innerHTML='<span class="small">まだ記録なし</span>';else{
   const groups={};current.sets.forEach((s,i)=>{(groups[s.exercise]??=[]).push({...s,i})});
@@ -531,7 +559,7 @@ function saveProfile(){localStorage.setItem(PROFILE,JSON.stringify({weight:weigh
 function finishSession(){
  if(!current.sets.length&&!current.cardio.length){alert('記録がありません');return}
  const e=estimate(),wt=parseFloat(weight.value)||0;
- current.id=uid();current.memo=memo.value.trim();current.weight=wt;current.kcal=e.total;current.minutes=e.minutes;current.savedAt=new Date().toISOString();
+ current.id=uid();current.memo=memo.value.trim();current.weight=wt;current.strengthIntensity=parseFloat(intensity.value)||5;current.kcal=e.total;current.minutes=e.minutes;current.savedAt=new Date().toISOString();
  const logs=allLogs();logs.unshift(JSON.parse(JSON.stringify(current)));writeLogs(logs);saveProfile();localStorage.removeItem(DRAFT);
  alert('保存しました');current={date:new Date().toISOString().slice(0,10),sets:[],cardio:[],memo:''};memo.value='';render();showDraftNotice();
 }
@@ -565,7 +593,7 @@ function renderHistoryEditor(){
  if(!editWorking)return;
  editHistoryDate.textContent=editWorking.date;
  editSetsList.innerHTML=(editWorking.sets||[]).map((s,i)=>`<div class="editSetRow"><select data-set-ex="${i}" onchange="syncEditWorking()"><option value="" ${!s.exercise?'selected':''}>種目を選択</option>${exercises.map(x=>`<option value="${escapeHtml(x)}" ${resolveAlias(s.exercise)===x?'selected':''}>${escapeHtml(x)}</option>`).join('')}</select><input data-set-kg="${i}" type="number" inputmode="decimal" placeholder="kg" value="${s.kg??''}" onchange="syncEditWorking()"><input data-set-reps="${i}" type="number" inputmode="numeric" placeholder="回" value="${s.reps??''}" onchange="syncEditWorking()"><button class="red" onclick="removeEditSet(${i})">×</button></div>`).join('')||'<span class="small">筋トレ記録なし</span>';
- editCardioList.innerHTML=(editWorking.cardio||[]).map((c,i)=>`<div class="editSetRow"><select data-cardio-name="${i}" onchange="syncEditWorking()"><option value="" ${!c.name?'selected':''}>種目を選択</option>${cardioActivities.map(a=>`<option value="${escapeHtml(a.label)}" ${c.name===a.label?'selected':''}>${escapeHtml(a.label)}</option>`).join('')}</select><input data-cardio-min="${i}" type="number" inputmode="numeric" placeholder="分" value="${c.minutes??''}" onchange="syncEditWorking()"><span class="small">分</span><button class="red" onclick="removeEditCardio(${i})">×</button></div>`).join('')||'<span class="small">有酸素記録なし</span>';
+ editCardioList.innerHTML=(editWorking.cardio||[]).map((c,i)=>{const cname=canonicalCardioName(c.name);const legacy=cname&&!cardioActivities.some(a=>a.label===cname)?`<option value="${escapeHtml(cname)}" selected>${escapeHtml(cname)}</option>`:'';return `<div class="editSetRow"><select data-cardio-name="${i}" onchange="syncEditWorking()"><option value="" ${!cname?'selected':''}>種目を選択</option>${legacy}${cardioActivities.map(a=>`<option value="${escapeHtml(a.label)}" ${cname===a.label?'selected':''}>${escapeHtml(a.label)}</option>`).join('')}</select><input data-cardio-min="${i}" type="number" inputmode="numeric" placeholder="分" value="${c.minutes??''}" onchange="syncEditWorking()"><span class="small">分</span><button class="red" onclick="removeEditCardio(${i})">×</button></div>`}).join('')||'<span class="small">有酸素記録なし</span>';
  editMemo.value=editWorking.memo||'';
  renderEditRecent();
 }
@@ -639,7 +667,7 @@ function syncEditWorking(){
  const sets=[];
  document.querySelectorAll('[data-set-ex]').forEach(el=>{const i=el.dataset.setEx,kgEl=document.querySelector(`[data-set-kg="${i}"]`),rEl=document.querySelector(`[data-set-reps="${i}"]`);if(kgEl&&rEl)sets.push({exercise:el.value,kg:kgEl.value===''?'':parseFloat(kgEl.value),reps:rEl.value===''?'':parseInt(rEl.value)})});
  const cardio=[];
- document.querySelectorAll('[data-cardio-name]').forEach(el=>{const i=el.dataset.cardioName,m=document.querySelector(`[data-cardio-min="${i}"]`);if(m){const act=cardioActivities.find(a=>a.label===el.value);cardio.push({name:el.value,met:act?.met||(editWorking.cardio?.[i]?.met)||5,minutes:m.value===''?'':parseInt(m.value)})}});
+ document.querySelectorAll('[data-cardio-name]').forEach(el=>{const i=el.dataset.cardioName,m=document.querySelector(`[data-cardio-min="${i}"]`);if(m){const name=canonicalCardioName(el.value),act=cardioMeta(name);cardio.push({name,met:act?.met||(editWorking.cardio?.[i]?.met)||5,minutes:m.value===''?'':parseInt(m.value)})}});
  editWorking.sets=sets;editWorking.cardio=cardio;editWorking.memo=editMemo.value.trim();
 }
 function addEditSet(){toggleEditAddPanel(true)}
@@ -658,15 +686,41 @@ function saveHistoryEdit(){
  const badCardio=(editWorking.cardio||[]).find(c=>!c.name||c.minutes==='');
  if(badCardio){alert('追加した有酸素の「種目・時間」を入力してください');return}
  const l={...editWorking,editedAt:new Date().toISOString()};
- const wt=l.weight||parseFloat(weight.value)||0,met=parseFloat(intensity.value)||5,sm=Math.round(l.sets.length*3.5),cm=l.cardio.reduce((a,c)=>a+(c.minutes||0),0);
- let total=wt?kcal(met,wt,sm):0;for(const c of l.cardio)total+=wt?kcal(c.met||5,wt,c.minutes||0):0;
- l.minutes=sm+cm;l.kcal=Math.round(total);
+ if(!l.strengthIntensity)l.strengthIntensity=parseFloat(intensity.value)||5;
+ const d=derivedStats(l,parseFloat(intensity.value)||5);
+ l.minutes=d.minutes;l.kcal=d.total;
  writeLogs(allLogs().map(x=>x.id===l.id?l:x));cancelHistoryEdit();renderHistory();alert('修正しました')
 }
 function cancelHistoryEdit(){editingLogId=null;editWorking=null;editSelected='';if(window.editAddPanel)editAddPanel.classList.add('hidden');editHistoryCard.classList.add('hidden');historyMain.classList.remove('hidden')}
 function deleteHistory(id){if(!confirm('この保存記録を削除しますか？'))return;writeLogs(allLogs().filter(x=>x.id!==id));renderHistory()}
 function showTab(t){todayTab.classList.toggle('hidden',t!=='today');historyTab.classList.toggle('hidden',t!=='history');if(t==='history'){cancelHistoryEdit();renderHistory()}else cancelHistoryEdit()}
-(function load(){const p=JSON.parse(localStorage.getItem(PROFILE)||'{}');if(p.weight)weight.value=p.weight;if(p.intensity)intensity.value=p.intensity;renderRecent();render();renderAliases();showDraftNotice();memo.addEventListener('input',()=>{if(current.sets.length||current.cardio.length)saveDraft(false)});})();
+const DERIVED_MIGRATION='gym-derived-v09';
+function migrateDerivedStatsV09(){
+ if(localStorage.getItem(DERIVED_MIGRATION)==='1')return;
+ const profile=JSON.parse(localStorage.getItem(PROFILE)||'{}');
+ const pmet=parseFloat(profile.intensity)||5;
+ const logs=allLogs();
+ let changed=false;
+ for(const l of logs){
+   if(!(parseFloat(l.weight)>0))continue;
+   const d=derivedStats(l,pmet);
+   if(l.kcal!==d.total||l.minutes!==d.minutes){
+     if(l.kcalLegacy===undefined)l.kcalLegacy=l.kcal;
+     if(l.minutesLegacy===undefined)l.minutesLegacy=l.minutes;
+     l.kcal=d.total;l.minutes=d.minutes;
+     if(!l.strengthIntensity)l.strengthIntensity=pmet;
+     for(const c of (l.cardio||[])){
+       c.name=canonicalCardioName(c.name);
+       const act=cardioMeta(c.name);if(act)c.met=act.met;
+     }
+     changed=true;
+   }
+ }
+ if(changed)writeLogs(logs);
+ localStorage.setItem(DERIVED_MIGRATION,'1');
+}
+
+(function load(){const p=JSON.parse(localStorage.getItem(PROFILE)||'{}');if(p.weight)weight.value=p.weight;if(p.intensity)intensity.value=p.intensity;populateCardioType();migrateDerivedStatsV09();renderRecent();render();renderAliases();showDraftNotice();memo.addEventListener('input',()=>{if(current.sets.length||current.cardio.length)saveDraft(false)});})();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 </script>
 </body>
