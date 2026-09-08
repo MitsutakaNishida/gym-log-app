@@ -1,0 +1,16 @@
+{
+  "version": "0.11",
+  "checks": {
+    "js_syntax": "pass",
+    "store_key_preserved": true,
+    "profile_key_preserved": true,
+    "recent_key_preserved": true,
+    "draft_key_preserved": true,
+    "aliases_key_preserved": true,
+    "new_suggestion_section": true,
+    "untried_only_logic": true,
+    "no_auto_weight_for_new": true,
+    "suggestion_not_auto_saved": true,
+    "service_worker_cache_v011": true
+  }
+}
