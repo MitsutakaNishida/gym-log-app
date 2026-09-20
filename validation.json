@@ -1,18 +1,14 @@
 {
-  "version": "0.12.2",
+  "version": "v0.12.3",
   "checks": {
-    "js_syntax": "pass",
-    "store_key_preserved": true,
-    "profile_key_preserved": true,
-    "recent_key_preserved": true,
-    "draft_key_preserved": true,
-    "aliases_key_preserved": true,
-    "health_sync_key_preserved": "gym_health_sync_v1",
-    "shortcut_name": "ジムをヘルスケアに記録",
-    "health_transport": "clipboard",
-    "health_delimiter": "~",
-    "x_callback_success_tracking": true,
-    "service_worker_cache": "gym-log-v0.12.2"
+    "ui_version_v0_12_3": true,
+    "setup_uses_clipboard": true,
+    "setup_delimiter_tilde": true,
+    "payload_format": true,
+    "shortcut_name": true,
+    "cache_version_v0_12_3": true,
+    "legacy_storage_key_preserved": true
   },
-  "notes": "Health payload is copied to clipboard before launching Shortcuts with input=clipboard, avoiding unreliable text URL-payload parsing."
+  "all_passed": true,
+  "notes": "UI version label and Health setup guide corrected; health sync logic/localStorage format unchanged from v0.12.2."
 }
