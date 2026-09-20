@@ -150,13 +150,13 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 <div id="healthSetup" class="healthSetup hidden">
 <b>初回だけ「ショートカット」を1つ作ります（名前は固定）</b>
 <ol>
-<li>iPhoneの「ショートカット」アプリで新規作成し、名前を <b>ジム記録→ヘルスケア</b> にする。</li>
-<li>「テキストを分割」を追加。入力は <b>ショートカットの入力</b>、区切り文字は <code>|</code>。</li>
+<li>iPhoneの「ショートカット」アプリで新規作成し、名前を <b>ジムをヘルスケアに記録</b> にする。</li>
+<li>「テキストを分割」を追加。入力は <b>ショートカットの入力</b>、区切り文字は <code>~</code>。</li>
 <li>分割結果から「リストから項目を取得」で <b>4番目</b>（kcal）を取得。</li>
 <li>同じ分割結果から <b>3番目</b>（日付）を取得し、「入力から日付を取得」に通す。</li>
 <li>「ヘルスケアサンプルを記録」を追加し、種類を <b>アクティブエネルギー</b>、値を4番目の項目、単位をkcal、日付を手順4の日付にする。</li>
 </ol>
-<div>入力形式：<code>GYMLOG_V1~記録ID~日付~kcal~分</code></div>
+<div>入力形式：<code>GYMLOG_V1~記録ID~日付~kcal~分</code></div><div style="margin-top:6px">※v0.12.2以降は、アプリがこの文字列をクリップボードに書き込み、ショートカットへ渡します。</div>
 <div style="margin-top:8px"><button class="soft" onclick="openShortcutsApp()">ショートカットを開く</button></div>
 </div>
 </div>
@@ -412,7 +412,7 @@ let previousSets=[];
 let current={date:new Date().toISOString().slice(0,10),sets:[],cardio:[],memo:''};
 let editingLogId=null,editWorking=null,editSelected='',editPreviousSets=[];
 const HEALTH_SYNC='gym_health_sync_v1';
-const HEALTH_SHORTCUT_NAME='ジム記録→ヘルスケア';
+const HEALTH_SHORTCUT_NAME='ジムをヘルスケアに記録';
 let pendingHealthSyncId=null;
 
 
@@ -749,14 +749,25 @@ function setHealthSynced(id){if(!id)return;const m=getHealthSyncMap();m[id]={syn
 function isHealthSynced(id){return !!getHealthSyncMap()[id]}
 function healthPayload(l){return ['GYMLOG_V1',l.id,l.date,Math.round(Number(l.kcal)||0),Math.round(Number(l.minutes)||0)].join('~')}
 function appBaseUrl(){return location.origin+location.pathname}
-function launchHealthShortcut(l){
+async function copyHealthPayload(text){
+ try{
+  if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true}
+ }catch(e){}
+ try{
+  const ta=document.createElement('textarea');ta.value=text;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';ta.style.pointerEvents='none';document.body.appendChild(ta);ta.focus();ta.select();const ok=document.execCommand('copy');ta.remove();return !!ok;
+ }catch(e){return false}
+}
+async function launchHealthShortcut(l){
  if(!l||!l.id){alert('連携する記録が見つかりません');return}
  if(!(Number(l.kcal)>0)){alert('消費カロリーが0kcalのため連携できません');return}
  pendingHealthSyncId=l.id;
+ const payload=healthPayload(l);
+ const copied=await copyHealthPayload(payload);
+ if(!copied){alert('連携データをクリップボードへコピーできませんでした。Safari/PWAのクリップボード許可を確認してください。');return}
  const success=appBaseUrl()+'?healthSync='+encodeURIComponent(l.id)+'&healthTab=history';
  const cancel=appBaseUrl()+'?healthCancel=1&healthTab=history';
  const error=appBaseUrl()+'?healthError=1&healthTab=history';
- const url='shortcuts://x-callback-url/run-shortcut?name='+encodeURIComponent(HEALTH_SHORTCUT_NAME)+'&input=text&text='+encodeURIComponent(healthPayload(l))+'&x-success='+encodeURIComponent(success)+'&x-cancel='+encodeURIComponent(cancel)+'&x-error='+encodeURIComponent(error);
+ const url='shortcuts://x-callback-url/run-shortcut?name='+encodeURIComponent(HEALTH_SHORTCUT_NAME)+'&input=clipboard&x-success='+encodeURIComponent(success)+'&x-cancel='+encodeURIComponent(cancel)+'&x-error='+encodeURIComponent(error);
  location.href=url;
 }
 function handleHealthCallback(){

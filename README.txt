@@ -1,17 +1,9 @@
-運動記録 β v0.12.1
+Gym Log beta v0.12.2
 
-GitHub Pages 用ファイル一式です。
+Health sync fix:
+- Shortcut name: ジムをヘルスケアに記録
+- App copies payload to clipboard and launches Shortcuts using input=clipboard
+- Existing shortcut Split Text delimiter remains ~
+- Existing localStorage keys/data format unchanged
 
-v0.12追加:
-- 今日の記録を保存してAppleヘルスケアへ連携するボタン
-- 履歴から過去の記録を1件ずつヘルスケアへ連携
-- iOSショートカット「ジム記録→ヘルスケア」をURLスキームで起動
-- 成功時のみ gym_health_sync_v1 に連携済み状態を保存
-- 既存の履歴/localStorageキーは変更なし
-
-初回のみアプリ内の「初回設定を見る」に従ってショートカットを作成してください。
-
-
-v0.12.1修正:
-- ショートカット連携の区切り文字を | から ~ に変更。URL経由でも確実に1文字として渡るよう改善。
-- 既存localStorage仕様・履歴データ形式は変更なし。
+Upload all files in this ZIP to the GitHub Pages repository root, replacing existing files.
