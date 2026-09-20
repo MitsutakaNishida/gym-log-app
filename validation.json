@@ -1,5 +1,5 @@
 {
-  "version": "0.12",
+  "version": "0.12.1",
   "checks": {
     "js_syntax": "pass",
     "store_key_preserved": true,
@@ -7,18 +7,14 @@
     "recent_key_preserved": true,
     "draft_key_preserved": true,
     "aliases_key_preserved": true,
-    "new_suggestion_section": true,
-    "untried_only_logic": true,
-    "no_auto_weight_for_new": true,
-    "suggestion_not_auto_saved": true,
+    "health_sync_key_added": "gym_health_sync_v1",
+    "shortcut_name": "ジム記録→ヘルスケア",
+    "today_save_and_health_button": true,
+    "history_health_button": true,
+    "x_callback_success_tracking": true,
     "service_worker_cache_v012": true,
-    "health_shortcut_url_payload": "pass",
-    "historical_date_payload": "pass",
-    "history_export_button": true,
-    "save_and_export_button": true,
-    "duplicate_warning_logic": "pass",
-    "edited_after_export_warning_logic": "pass",
-    "health_export_state_separate_from_workout_log": true,
-    "browser_visual_test": "not_run_browser_binary_unavailable"
-  }
+    "static_integration_checks": "pass"
+  },
+  "health_shortcut_delimiter": "~",
+  "notes": "Health shortcut delimiter changed from | to ~ to avoid single-item split when launched through URL scheme."
 }

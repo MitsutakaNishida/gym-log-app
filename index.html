@@ -32,13 +32,14 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef3ff;color:#244d9b;font-size:12px;font-weight:700}
 
 .suggestCard{border:1px solid #dbe4f2;border-radius:18px;padding:13px;margin-top:10px;background:#fbfdff}.suggestTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.suggestName{font-size:17px;font-weight:800}.suggestScore{white-space:nowrap;background:#eef3ff;color:#244d9b;border-radius:999px;padding:5px 8px;font-size:12px;font-weight:800}.suggestReason{margin-top:5px;font-size:13px;color:var(--muted);line-height:1.45}.suggestSets{margin-top:8px;font-size:14px;font-weight:700;line-height:1.55}.suggestActions{display:flex;gap:8px;margin-top:10px}.suggestActions button{flex:1;padding:10px 12px;font-size:14px}.suggestEmpty{padding:10px 2px;color:var(--muted);font-size:13px;line-height:1.55}
-.health{background:#ffe9ef;color:#9b2043}.healthSetup{margin-top:12px;border:1px solid #f1c9d5;border-radius:16px;padding:12px;background:#fff8fa}.healthSetup summary{font-weight:800;color:#8d2342;cursor:pointer}.healthSetup ol{margin:10px 0 4px;padding-left:22px}.healthSetup li{margin:7px 0;line-height:1.45}.healthStatus{margin-top:7px;color:#8d2342;font-size:12px;font-weight:700}
+
+.healthBox{margin-top:12px;padding:13px;border:1px solid #d7e8dc;border-radius:16px;background:#f7fff9}.healthBtn{background:#e5f7e9;color:#176b28}.healthBtnSynced{background:#edf1f5;color:#5f6875}.healthSetup{margin-top:10px;padding:12px;border-radius:14px;background:#f7f9fd;border:1px solid var(--line);font-size:13px;line-height:1.6}.healthSetup ol{padding-left:20px;margin:8px 0}.healthSetup code{font-size:12px;background:#eef2f7;padding:2px 5px;border-radius:6px}.healthStatus{margin-top:6px;font-size:12px;color:#5f6875}
 
 </style>
 </head>
 <body>
 <div class="wrap">
-<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.12</span></h1>
+<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.12.1</span></h1>
 <p class="sub">途中保存・あとから編集対応。過去履歴から今日のおすすめも提案します。</p>
 
 <div class="toprow">
@@ -140,26 +141,31 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 <label>メモ（任意）</label><textarea id="memo" placeholder="空欄でOK"></textarea>
 <div class="rowBtns">
 <button class="soft" onclick="saveDraft(true)">💾 一時保存</button>
-<button class="green" onclick="finishSession(false)">✅ 保存</button>
-<button class="health" onclick="finishSession(true)">❤️ 保存して連携</button>
+<button class="green" onclick="finishSession()">✅ 今日の運動を保存</button>
 </div>
-<p class="small">※消費カロリーは概算です。</p>
-<details class="healthSetup">
-<summary>初回だけ：ヘルスケア連携の設定</summary>
-<ol class="small">
-<li>iPhoneの「ショートカット」で新規作成し、名前を <b>ジムをヘルスケアに記録</b> にする</li>
-<li>「入力から辞書を取得」を追加</li>
-<li>辞書から <b>kcal</b> と <b>dateTime</b> の値を取り出す</li>
-<li>「ヘルスケアサンプルを記録」を追加し、種類を <b>アクティブエネルギー</b>、値を <b>kcal</b>、日付を <b>dateTime</b> にする</li>
-<li>初回実行時にヘルスケアへの書き込みを許可する</li>
+<div class="healthBox">
+<button class="healthBtn" style="width:100%" onclick="finishSessionToHealth()">❤️ 保存してヘルスケアへ連携</button>
+<div class="healthStatus">Apple Watchなし運用向け。推定アクティブ消費(kcal)をショートカット経由でヘルスケアへ記録します。</div>
+<button class="soft" style="width:100%;margin-top:9px" onclick="toggleHealthSetup()">⚙️ 初回設定を見る</button>
+<div id="healthSetup" class="healthSetup hidden">
+<b>初回だけ「ショートカット」を1つ作ります（名前は固定）</b>
+<ol>
+<li>iPhoneの「ショートカット」アプリで新規作成し、名前を <b>ジム記録→ヘルスケア</b> にする。</li>
+<li>「テキストを分割」を追加。入力は <b>ショートカットの入力</b>、区切り文字は <code>|</code>。</li>
+<li>分割結果から「リストから項目を取得」で <b>4番目</b>（kcal）を取得。</li>
+<li>同じ分割結果から <b>3番目</b>（日付）を取得し、「入力から日付を取得」に通す。</li>
+<li>「ヘルスケアサンプルを記録」を追加し、種類を <b>アクティブエネルギー</b>、値を4番目の項目、単位をkcal、日付を手順4の日付にする。</li>
 </ol>
-<div class="small">以後はアプリのボタンだけで起動します。ショートカット名は一字でも違うと動きません。</div>
-</details>
+<div>入力形式：<code>GYMLOG_V1~記録ID~日付~kcal~分</code></div>
+<div style="margin-top:8px"><button class="soft" onclick="openShortcutsApp()">ショートカットを開く</button></div>
+</div>
+</div>
+<p class="small">※消費カロリーは概算です。連携後にアプリ側の記録を修正しても、ヘルスケア側は自動更新されません。</p>
 </div>
 </section>
 
 <section id="historyTab" class="hidden">
-<div id="historyMain" class="card"><div class="section-title">履歴</div><p class="small">同じ日の記録はまとめて表示。日付をタップすると、過去分もヘルスケアへ記録できます。</p><div id="historyList"></div></div>
+<div id="historyMain" class="card"><div class="section-title">履歴</div><p class="small">同じ日の記録はまとめて表示。日付をタップすると詳細が開きます。各記録から過去分もヘルスケアへ連携できます。</p><div id="historyList"></div></div>
 <div id="editHistoryCard" class="card hidden">
 <div class="section-title">保存済み記録を修正</div>
 <div id="editHistoryDate" class="small"></div>
@@ -208,8 +214,6 @@ const PROFILE='gym_log_profile_v1';
 const RECENT='gym_log_recent_exercises_v1';
 const DRAFT='gym_log_draft_v1';
 const CUSTOM_ALIASES='gym_log_custom_aliases_v1';
-const HEALTH_EXPORTS='gym_log_health_exports_v1';
-const HEALTH_SHORTCUT_NAME='ジムをヘルスケアに記録';
 const exerciseDB=[
 {n:'レッグプレス',cat:['脚','マシン']},
 {n:'リニアレッグプレス',cat:['脚','マシン']},
@@ -407,6 +411,10 @@ let selected='';
 let previousSets=[];
 let current={date:new Date().toISOString().slice(0,10),sets:[],cardio:[],memo:''};
 let editingLogId=null,editWorking=null,editSelected='',editPreviousSets=[];
+const HEALTH_SYNC='gym_health_sync_v1';
+const HEALTH_SHORTCUT_NAME='ジム記録→ヘルスケア';
+let pendingHealthSyncId=null;
+
 
 function uid(){return 'g'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 function allLogs(){
@@ -733,42 +741,49 @@ function resumeDraft(){
  memo.value=d.memo||'';if(d.weight)weight.value=d.weight;if(d.intensity)intensity.value=d.intensity;render();draftNotice.classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'})
 }
 function discardDraft(){if(confirm('一時保存データを破棄しますか？')){localStorage.removeItem(DRAFT);showDraftNotice()}}
-function saveProfile(silent=false){localStorage.setItem(PROFILE,JSON.stringify({weight:weight.value,intensity:intensity.value}));if(!silent)alert('保存しました')}
-function finishSession(exportToHealth=false){
+function saveProfile(){localStorage.setItem(PROFILE,JSON.stringify({weight:weight.value,intensity:intensity.value}));alert('保存しました')}
+function toggleHealthSetup(){if(window.healthSetup)healthSetup.classList.toggle('hidden')}
+function openShortcutsApp(){location.href='shortcuts://'}
+function getHealthSyncMap(){try{return JSON.parse(localStorage.getItem(HEALTH_SYNC)||'{}')}catch(e){return {}}}
+function setHealthSynced(id){if(!id)return;const m=getHealthSyncMap();m[id]={syncedAt:new Date().toISOString()};localStorage.setItem(HEALTH_SYNC,JSON.stringify(m))}
+function isHealthSynced(id){return !!getHealthSyncMap()[id]}
+function healthPayload(l){return ['GYMLOG_V1',l.id,l.date,Math.round(Number(l.kcal)||0),Math.round(Number(l.minutes)||0)].join('~')}
+function appBaseUrl(){return location.origin+location.pathname}
+function launchHealthShortcut(l){
+ if(!l||!l.id){alert('連携する記録が見つかりません');return}
+ if(!(Number(l.kcal)>0)){alert('消費カロリーが0kcalのため連携できません');return}
+ pendingHealthSyncId=l.id;
+ const success=appBaseUrl()+'?healthSync='+encodeURIComponent(l.id)+'&healthTab=history';
+ const cancel=appBaseUrl()+'?healthCancel=1&healthTab=history';
+ const error=appBaseUrl()+'?healthError=1&healthTab=history';
+ const url='shortcuts://x-callback-url/run-shortcut?name='+encodeURIComponent(HEALTH_SHORTCUT_NAME)+'&input=text&text='+encodeURIComponent(healthPayload(l))+'&x-success='+encodeURIComponent(success)+'&x-cancel='+encodeURIComponent(cancel)+'&x-error='+encodeURIComponent(error);
+ location.href=url;
+}
+function handleHealthCallback(){
+ const q=new URLSearchParams(location.search);const id=q.get('healthSync');
+ if(id){setHealthSynced(id);history.replaceState({},document.title,location.pathname);setTimeout(()=>{showTab('history');renderHistory();alert('ヘルスケア連携が完了しました')},80);return}
+ if(q.get('healthCancel')){history.replaceState({},document.title,location.pathname);setTimeout(()=>{showTab('history');alert('ヘルスケア連携をキャンセルしました')},80);return}
+ if(q.get('healthError')){history.replaceState({},document.title,location.pathname);setTimeout(()=>{showTab('history');alert('ヘルスケア連携でエラーが出ました。初回設定のショートカット名と手順を確認してください')},80);return}
+}
+function finishSessionToHealth(){
+ if(!current.sets.length&&!current.cardio.length){alert('記録がありません');return}
+ const e=estimate(),wt=parseFloat(weight.value)||0;
+ const saved={...JSON.parse(JSON.stringify(current)),id:uid(),memo:memo.value.trim(),weight:wt,strengthIntensity:parseFloat(intensity.value)||5,kcal:e.total,minutes:e.minutes,savedAt:new Date().toISOString()};
+ const logs=allLogs();logs.unshift(saved);writeLogs(logs);localStorage.setItem(PROFILE,JSON.stringify({weight:weight.value,intensity:intensity.value}));localStorage.removeItem(DRAFT);
+ current={date:new Date().toISOString().slice(0,10),sets:[],cardio:[],memo:''};memo.value='';render();renderAllSuggestions();showDraftNotice();
+ launchHealthShortcut(saved);
+}
+function syncHistoryToHealth(id){
+ const l=allLogs().find(x=>x.id===id);if(!l)return;
+ if(isHealthSynced(id)){alert('この記録は連携済みです');return}
+ launchHealthShortcut(l)
+}
+function finishSession(){
  if(!current.sets.length&&!current.cardio.length){alert('記録がありません');return}
  const e=estimate(),wt=parseFloat(weight.value)||0;
  current.id=uid();current.memo=memo.value.trim();current.weight=wt;current.strengthIntensity=parseFloat(intensity.value)||5;current.kcal=e.total;current.minutes=e.minutes;current.savedAt=new Date().toISOString();
- const saved=JSON.parse(JSON.stringify(current));
- const logs=allLogs();logs.unshift(saved);writeLogs(logs);saveProfile(true);localStorage.removeItem(DRAFT);
- current={date:new Date().toISOString().slice(0,10),sets:[],cardio:[],memo:''};memo.value='';render();renderAllSuggestions();showDraftNotice();
- if(exportToHealth)openHealthShortcut(saved,true);else alert('保存しました');
-}
-function getHealthExports(){
- try{return JSON.parse(localStorage.getItem(HEALTH_EXPORTS)||'{}')||{}}catch(e){return{}}
-}
-function healthExportState(l){
- const x=getHealthExports()[l.id];if(!x)return '';
- return Number(x.kcal)===Number(l.kcal)&&Number(x.minutes)===Number(l.minutes)&&x.date===l.date?'started':'changed';
-}
-function healthButtonLabel(l){
- const s=healthExportState(l);return s==='started'?'❤️ 連携開始済み・再送':s==='changed'?'⚠️ 編集後・再送':'❤️ ヘルスケアへ';
-}
-function markHealthExportStarted(l){
- const all=getHealthExports();all[l.id]={date:l.date,kcal:Number(l.kcal)||0,minutes:Number(l.minutes)||0,startedAt:new Date().toISOString()};localStorage.setItem(HEALTH_EXPORTS,JSON.stringify(all));
-}
-function healthDateTime(date){
- const d=new Date(`${date}T12:00:00`);return Number.isNaN(d.getTime())?new Date().toISOString():d.toISOString();
-}
-function openHealthShortcut(l,skipRepeatCheck=false){
- const kcal=Math.round(Number(l.kcal)||0);
- if(kcal<=0){alert('消費カロリーが0kcalのため連携できません。プロフィールの体重を確認してください。');return}
- const state=healthExportState(l);
- if(!skipRepeatCheck&&state==='started'&&!confirm('この記録は連携を開始済みです。再送すると二重計上になる可能性があります。もう一度送りますか？'))return;
- if(!skipRepeatCheck&&state==='changed'&&!confirm('連携後にこの記録が編集されています。ヘルスケア側の旧データを削除してから再送してください。再送しますか？'))return;
- const payload={version:1,id:l.id,date:l.date,dateTime:healthDateTime(l.date),kcal,minutes:Number(l.minutes)||0,source:'運動記録β'};
- markHealthExportStarted(l);
- const url=`shortcuts://run-shortcut?name=${encodeURIComponent(HEALTH_SHORTCUT_NAME)}&input=text&text=${encodeURIComponent(JSON.stringify(payload))}`;
- window.location.href=url;
+ const logs=allLogs();logs.unshift(JSON.parse(JSON.stringify(current)));writeLogs(logs);saveProfile();localStorage.removeItem(DRAFT);
+ alert('保存しました');current={date:new Date().toISOString().slice(0,10),sets:[],cardio:[],memo:''};memo.value='';render();renderAllSuggestions();showDraftNotice();
 }
 function groupedLogs(){
  const groups={};for(const l of allLogs())(groups[l.date]??=[]).push(l);return groups
@@ -786,10 +801,9 @@ function renderHistorySession(l,num,total){
  const grouped={};(l.sets||[]).forEach(s=>(grouped[resolveAlias(s.exercise)]??=[]).push(s));
  const setHtml=Object.entries(grouped).map(([name,arr])=>`<div class="detailExercise"><b>${escapeHtml(name)}</b><div class="detailSets">${arr.map(s=>`${s.kg}kg × ${s.reps}`).join(' / ')}</div></div>`).join('');
  const cardio=(l.cardio||[]).map(c=>`<div class="detailExercise"><b>${escapeHtml(c.name)}</b><div class="detailSets">${c.minutes}分</div></div>`).join('');
- const healthState=healthExportState(l),healthNote=healthState==='started'?'<div class="healthStatus">この端末で連携を開始済み</div>':healthState==='changed'?'<div class="healthStatus">連携後にアプリの記録が変更されています</div>':'';
- return `<div class="historySession">${total>1?`<span class="badge">記録 ${num}</span>`:''}${setHtml}${cardio}${l.memo?`<div class="small" style="margin-top:8px">メモ：${escapeHtml(l.memo)}</div>`:''}${healthNote}<div class="rowBtns"><button class="health" onclick="openHealthShortcutById('${l.id}')">${healthButtonLabel(l)}</button><button class="soft" onclick="editHistory('${l.id}')">修正</button><button class="red" onclick="deleteHistory('${l.id}')">削除</button></div></div>`
+ const synced=isHealthSynced(l.id);
+ return `<div class="historySession">${total>1?`<span class="badge">記録 ${num}</span>`:''}${setHtml}${cardio}${l.memo?`<div class="small" style="margin-top:8px">メモ：${escapeHtml(l.memo)}</div>`:''}<div class="small" style="margin-top:6px">${Math.round(Number(l.minutes)||0)}分・${Math.round(Number(l.kcal)||0)}kcal</div><div class="rowBtns"><button class="${synced?'healthBtnSynced':'healthBtn'}" ${synced?'disabled':''} onclick="syncHistoryToHealth('${l.id}')">${synced?'✅ 連携済み':'❤️ ヘルスケア'}</button><button class="soft" onclick="editHistory('${l.id}')">修正</button><button class="red" onclick="deleteHistory('${l.id}')">削除</button></div></div>`
 }
-function openHealthShortcutById(id){const l=allLogs().find(x=>x.id===id);if(l)openHealthShortcut(l)}
 function toggleDay(date){document.getElementById('day-'+date).classList.toggle('hidden')}
 function editHistory(id){
  const l=allLogs().find(x=>x.id===id);if(!l)return;
@@ -929,7 +943,7 @@ function migrateDerivedStatsV09(){
  localStorage.setItem(DERIVED_MIGRATION,'1');
 }
 
-(function load(){const p=JSON.parse(localStorage.getItem(PROFILE)||'{}');if(p.weight)weight.value=p.weight;if(p.intensity)intensity.value=p.intensity;populateCardioType();migrateDerivedStatsV09();renderRecent();render();renderAliases();renderAllSuggestions();showDraftNotice();memo.addEventListener('input',()=>{if(current.sets.length||current.cardio.length)saveDraft(false)});})();
+(function load(){const p=JSON.parse(localStorage.getItem(PROFILE)||'{}');if(p.weight)weight.value=p.weight;if(p.intensity)intensity.value=p.intensity;populateCardioType();migrateDerivedStatsV09();renderRecent();render();renderAliases();renderAllSuggestions();showDraftNotice();memo.addEventListener('input',()=>{if(current.sets.length||current.cardio.length)saveDraft(false)});handleHealthCallback();})();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 </script>
 </body>
