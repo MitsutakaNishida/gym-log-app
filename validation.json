@@ -1,14 +1,34 @@
 {
-  "version": "v0.12.3",
+  "version": "v0.13.0",
+  "base": "gym_log_beta_v0_12_3.zip",
+  "storage_schema": "backward-compatible extension; optional side only for side-tracked exercises",
+  "storage_migration_required": false,
   "checks": {
-    "ui_version_v0_12_3": true,
-    "setup_uses_clipboard": true,
-    "setup_delimiter_tilde": true,
-    "payload_format": true,
-    "shortcut_name": true,
-    "cache_version_v0_12_3": true,
-    "legacy_storage_key_preserved": true
+    "ui_version_v0_13_0": true,
+    "external_rotation_added": true,
+    "pallof_added": true,
+    "zero_kg_valid": true,
+    "shoulder_care_no_progression": true,
+    "pallof_stability_progression": true,
+    "pallof_side_tracking": true,
+    "shoulder_warmup_suggestion": true,
+    "pallof_twice_weekly_logic": true,
+    "categories_added": true,
+    "legacy_store_key": true,
+    "legacy_profile_key": true,
+    "legacy_recent_key": true,
+    "legacy_draft_key": true,
+    "legacy_alias_key": true,
+    "health_payload_unchanged": true,
+    "health_shortcut_name_unchanged": true,
+    "cache_version_v0_13_0": true
   },
   "all_passed": true,
-  "notes": "UI version label and Health setup guide corrected; health sync logic/localStorage format unchanged from v0.12.2."
+  "notes": [
+    "Existing localStorage keys unchanged.",
+    "Existing {exercise,kg,reps} set records remain valid.",
+    "Set count remains implicit as number of set rows.",
+    "0kg accepted; negative kg rejected.",
+    "Health sync payload/shortcut contract unchanged."
+  ]
 }
