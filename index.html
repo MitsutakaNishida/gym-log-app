@@ -40,7 +40,7 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 </head>
 <body>
 <div class="wrap">
-<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.13.1</span></h1>
+<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.13.2</span></h1>
 <p class="sub">途中保存・あとから編集対応。過去履歴から今日のおすすめも提案します。</p>
 
 <div class="toprow">
@@ -159,7 +159,7 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 <li>同じ分割結果から <b>3番目</b>（日付）を取得し、「入力から日付を取得」に通す。</li>
 <li>「ヘルスケアサンプルを記録」を追加し、種類を <b>アクティブエネルギー</b>、値を4番目の項目、単位をkcal、日付を手順4の日付にする。</li>
 </ol>
-<div>入力形式：<code>GYMLOG_V1~記録ID~日付~kcal~分</code></div><div style="margin-top:6px">※v0.13.1では、アプリがこの文字列をクリップボードに書き込みます。ショートカット側は「ショートカットの入力」ではなく、<b>クリップボード</b>を直接分割してください。</div>
+<div>入力形式：<code>GYMLOG_V1~記録ID~日付~kcal~分</code></div><div style="margin-top:6px">※v0.13.2では、アプリがこの文字列をクリップボードに書き込みます。ショートカット側は「ショートカットの入力」ではなく、<b>クリップボード</b>を直接分割してください。</div>
 <div style="margin-top:8px"><button class="soft" onclick="openShortcutsApp()">ショートカットを開く</button></div>
 </div>
 </div>
@@ -171,7 +171,9 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 <div id="historyMain" class="card"><div class="section-title">履歴</div><p class="small">同じ日の記録はまとめて表示。日付をタップすると詳細が開きます。各記録から過去分もヘルスケアへ連携できます。</p><div id="historyList"></div></div>
 <div id="editHistoryCard" class="card hidden">
 <div class="section-title">保存済み記録を修正</div>
-<div id="editHistoryDate" class="small"></div>
+<label for="editHistoryDateInput">トレーニング日</label>
+<input id="editHistoryDateInput" type="date" onchange="syncEditWorking()">
+<div class="small" style="margin-top:6px">日付を変更しても、Appleヘルスケアに登録済みのデータは自動変更されません。</div>
 <div id="editSetsList"></div>
 <button class="soft" style="width:100%;margin-top:10px" onclick="toggleEditAddPanel(true)">＋ 筋トレセットを追加</button>
 
@@ -873,7 +875,7 @@ function editHistory(id){
 }
 function renderHistoryEditor(){
  if(!editWorking)return;
- editHistoryDate.textContent=editWorking.date;
+ editHistoryDateInput.value=editWorking.date;
  editSetsList.innerHTML=(editWorking.sets||[]).map((s,i)=>{const sm=exerciseMeta(s.exercise),sideRow=sm?.sideMode==='required'?`<div class="editSideRow"><span class="small">左右</span><select data-set-side="${i}" onchange="syncEditWorking()"><option value="左" ${s.side==='左'?'selected':''}>左</option><option value="右" ${s.side==='右'?'selected':''}>右</option></select></div>`:'';return `<div class="editSetRow"><select data-set-ex="${i}" onchange="syncEditWorking()"><option value="" ${!s.exercise?'selected':''}>種目を選択</option>${exercises.map(x=>`<option value="${escapeHtml(x)}" ${resolveAlias(s.exercise)===x?'selected':''}>${escapeHtml(x)}</option>`).join('')}</select><input data-set-kg="${i}" type="number" min="0" inputmode="decimal" placeholder="kg" value="${s.kg??''}" onchange="syncEditWorking()"><input data-set-reps="${i}" type="number" min="1" inputmode="numeric" placeholder="回" value="${s.reps??''}" onchange="syncEditWorking()"><button class="red" onclick="removeEditSet(${i})">×</button></div>${sideRow}`}).join('')||'<span class="small">筋トレ記録なし</span>';
  editCardioList.innerHTML=(editWorking.cardio||[]).map((c,i)=>{const cname=canonicalCardioName(c.name);const legacy=cname&&!cardioActivities.some(a=>a.label===cname)?`<option value="${escapeHtml(cname)}" selected>${escapeHtml(cname)}</option>`:'';return `<div class="editSetRow"><select data-cardio-name="${i}" onchange="syncEditWorking()"><option value="" ${!cname?'selected':''}>種目を選択</option>${legacy}${cardioActivities.map(a=>`<option value="${escapeHtml(a.label)}" ${cname===a.label?'selected':''}>${escapeHtml(a.label)}</option>`).join('')}</select><input data-cardio-min="${i}" type="number" inputmode="numeric" placeholder="分" value="${c.minutes??''}" onchange="syncEditWorking()"><span class="small">分</span><button class="red" onclick="removeEditCardio(${i})">×</button></div>`}).join('')||'<span class="small">有酸素記録なし</span>';
  editMemo.value=editWorking.memo||'';
@@ -954,6 +956,7 @@ function syncEditWorking(){
  const cardio=[];
  document.querySelectorAll('[data-cardio-name]').forEach(el=>{const i=el.dataset.cardioName,m=document.querySelector(`[data-cardio-min="${i}"]`);if(m){const name=canonicalCardioName(el.value),act=cardioMeta(name);cardio.push({name,met:act?.met||(editWorking.cardio?.[i]?.met)||5,minutes:m.value===''?'':parseInt(m.value)})}});
  editWorking.sets=sets;editWorking.cardio=cardio;editWorking.memo=editMemo.value.trim();
+ if(editHistoryDateInput.value)editWorking.date=editHistoryDateInput.value;
 }
 function addEditSet(){toggleEditAddPanel(true)}
 function addEditCardio(){
@@ -970,7 +973,15 @@ function saveHistoryEdit(){
  if(badSet){alert('筋トレセットの「種目・重量（0kg可）・回数」と、必要な種目は「左右」を確認してください');return}
  const badCardio=(editWorking.cardio||[]).find(c=>!c.name||c.minutes==='');
  if(badCardio){alert('追加した有酸素の「種目・時間」を入力してください');return}
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(editWorking.date)||Number.isNaN(new Date(editWorking.date+'T12:00:00').getTime())){
+   alert('有効なトレーニング日を指定してください');return;
+ }
+ const original=allLogs().find(x=>x.id===editWorking.id);
  const l={...editWorking,editedAt:new Date().toISOString()};
+ if(original&&original.date!==l.date){
+   l.dateEditPrevious=original.date;
+   l.dateEditAt=l.editedAt;
+ }
  if(!l.strengthIntensity)l.strengthIntensity=parseFloat(intensity.value)||5;
  const d=derivedStats(l,parseFloat(intensity.value)||5);
  l.minutes=d.minutes;l.kcal=d.total;
@@ -979,6 +990,46 @@ function saveHistoryEdit(){
 function cancelHistoryEdit(){editingLogId=null;editWorking=null;editSelected='';if(window.editAddPanel)editAddPanel.classList.add('hidden');editHistoryCard.classList.add('hidden');historyMain.classList.remove('hidden')}
 function deleteHistory(id){if(!confirm('この保存記録を削除しますか？'))return;writeLogs(allLogs().filter(x=>x.id!==id));renderHistory()}
 function showTab(t){todayTab.classList.toggle('hidden',t!=='today');historyTab.classList.toggle('hidden',t!=='history');if(t==='history'){cancelHistoryEdit();renderHistory()}else cancelHistoryEdit()}
+// One-time, conservative correction for v0.13.0 and older UTC-derived workout dates.
+// Only records saved in the JST 00:00-08:59 window with an exact UTC date match qualify.
+// Existing manually edited records are excluded; all original logs are backed up first.
+const DATE_FIX_MIGRATION='gym-date-fix-v0132';
+const DATE_FIX_BACKUP='gym-date-fix-v0132-backup';
+function migrateLegacyWorkoutDates(){
+ if(localStorage.getItem(DATE_FIX_MIGRATION)==='1')return;
+ const raw=localStorage.getItem(STORE);
+ if(!raw){localStorage.setItem(DATE_FIX_MIGRATION,'1');return}
+ let logs;
+ try{logs=JSON.parse(raw);if(!Array.isArray(logs))return}catch(e){return}
+ const fixes=[];
+ for(const l of logs){
+   if(!l||typeof l.date!=='string'||typeof l.savedAt!=='string')continue;
+   if(l.editedAt||l.dateEditAt||l.dateFixV0132)continue;
+   const d=new Date(l.savedAt);
+   if(Number.isNaN(d.getTime()))continue;
+   const jst=new Date(d.getTime()+9*60*60*1000);
+   const correct=jst.toISOString().slice(0,10);
+   const utc=d.toISOString().slice(0,10);
+   if(l.date===utc&&correct!==utc){
+     fixes.push({log:l,old:l.date,correct});
+   }
+ }
+ if(fixes.length){
+   try{
+     // Preserve the exact pre-migration serialized history, without overwriting backups.
+     if(!localStorage.getItem(DATE_FIX_BACKUP))localStorage.setItem(DATE_FIX_BACKUP,raw);
+     for(const f of fixes){
+       f.log.date=f.correct;
+       f.log.dateFixV0132={previousDate:f.old,correctedAt:new Date().toISOString(),basis:'savedAt UTC/JST rollover'};
+     }
+     localStorage.setItem(STORE,JSON.stringify(logs));
+   }catch(e){return}
+ }
+ localStorage.setItem(DATE_FIX_MIGRATION,'1');
+ if(fixes.length){
+   setTimeout(()=>alert(`${fixes.length}件の記録日を日本時間に自動補正しました。補正前の履歴は端末内にバックアップ済みです。Appleヘルスケアの登録日は自動変更されません。`),200);
+ }
+}
 const DERIVED_MIGRATION='gym-derived-v09';
 function migrateDerivedStatsV09(){
  if(localStorage.getItem(DERIVED_MIGRATION)==='1')return;
@@ -1005,7 +1056,7 @@ function migrateDerivedStatsV09(){
  localStorage.setItem(DERIVED_MIGRATION,'1');
 }
 
-(function load(){const p=JSON.parse(localStorage.getItem(PROFILE)||'{}');if(p.weight)weight.value=p.weight;if(p.intensity)intensity.value=p.intensity;populateCardioType();migrateDerivedStatsV09();renderRecent();render();renderAliases();renderAllSuggestions();showDraftNotice();memo.addEventListener('input',()=>{if(current.sets.length||current.cardio.length)saveDraft(false)});handleHealthCallback();})();
+(function load(){const p=JSON.parse(localStorage.getItem(PROFILE)||'{}');if(p.weight)weight.value=p.weight;if(p.intensity)intensity.value=p.intensity;populateCardioType();migrateDerivedStatsV09();migrateLegacyWorkoutDates();renderRecent();render();renderAliases();renderAllSuggestions();showDraftNotice();memo.addEventListener('input',()=>{if(current.sets.length||current.cardio.length)saveDraft(false)});handleHealthCallback();})();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 </script>
 </body>
