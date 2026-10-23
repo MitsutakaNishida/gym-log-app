@@ -1,4 +1,4 @@
-Gym Log beta v0.13.0
+Gym Log beta v0.13.1
 
 Base: v0.12.3 (Health sync fix retained)
 
@@ -33,3 +33,10 @@ Future cable exercise structure:
 - Wood chops, low-to-high cable lifts, and other rotation/anti-rotation cable exercises can be added as ゴルフ／体幹 entries without changing the saved-data model.
 
 Upload all files in this ZIP to the GitHub Pages repository root, replacing existing files.
+
+Date correction (v0.13.1):
+- New workout dates use device-local calendar date via existing localToday(), not UTC ISO date.
+- Four date initialization/fallback/reset paths corrected.
+- Timestamp fields (savedAt, draftSavedAt, syncedAt, editedAt) stay unchanged as UTC ISO instants.
+- No migration or changes to historical records; inspect any past early-morning dates manually.
+- Health Shortcut and clipboard payload format remain unchanged.

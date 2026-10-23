@@ -1,10 +1,9 @@
 {
-  "version": "v0.13.0",
+  "version": "v0.13.1",
   "base": "gym_log_beta_v0_12_3.zip",
   "storage_schema": "backward-compatible extension; optional side only for side-tracked exercises",
   "storage_migration_required": false,
   "checks": {
-    "ui_version_v0_13_0": true,
     "external_rotation_added": true,
     "pallof_added": true,
     "zero_kg_valid": true,
@@ -21,7 +20,12 @@
     "legacy_alias_key": true,
     "health_payload_unchanged": true,
     "health_shortcut_name_unchanged": true,
-    "cache_version_v0_13_0": true
+    "ui_version_v0_13_1": true,
+    "cache_version_v0_13_1": true,
+    "four_utc_calendar_dates_replaced": true,
+    "local_date_function_reused": true,
+    "utc_instant_timestamps_preserved": true,
+    "existing_records_not_migrated": true
   },
   "all_passed": true,
   "notes": [
@@ -29,6 +33,7 @@
     "Existing {exercise,kg,reps} set records remain valid.",
     "Set count remains implicit as number of set rows.",
     "0kg accepted; negative kg rejected.",
-    "Health sync payload/shortcut contract unchanged."
+    "Health sync payload/shortcut contract unchanged.",
+    "Fixed four UTC calendar-date expressions to use localToday(). Past records not modified."
   ]
 }
