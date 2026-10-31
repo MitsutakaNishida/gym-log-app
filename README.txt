@@ -1,1 +1,1 @@
-UPSHIFT v0.14.1: name, home-screen label and tagline updated. Upload extracted app files to MitsutakaNishida/gym-log-app. Local workout data storage keys remain unchanged.
+UPSHIFT v0.14.2: JSON backup/export and safe merge import. Deploy same files to gym-log-app. Open OLD home-screen app after deployment to export; open NEW UPSHIFT home-screen app to import. Do not delete old app until validated.

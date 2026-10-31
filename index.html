@@ -37,7 +37,7 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 .exerciseMeta{margin-top:10px;padding:12px;border:1px solid #dbe4f2;border-radius:14px;background:#f8fbff;font-size:13px;line-height:1.6}.exerciseMeta b{color:#203d75}.careNote{margin-top:8px;padding:9px 10px;border-radius:12px;background:#fff7e8;color:#77521a}.safetyNote{margin-top:8px;padding:9px 10px;border-radius:12px;background:#fff1f1;color:#8d2f2f}.sideWrap{margin-top:8px}.sideTag{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:999px;background:#eef3ff;color:#244d9b;font-size:11px;font-weight:800}.editSideRow{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;margin:-2px 0 9px 0;padding-left:6px}.editSideRow select{font-size:14px;padding:9px}
 
 
-/* v0.14.1 visual system: flat, warm off-white / deep navy / muted gold */
+/* v0.14.2 visual system: flat, warm off-white / deep navy / muted gold */
 :root{--bg:#f6f3ed;--card:#fffdf9;--ink:#192b45;--muted:#667184;--blue:#192f4c;--blue2:#e9edf2;--green:#e6eee6;--red:#f5e9e5;--line:#e4dfd6;--gold:#bd985b}
 body{background:var(--bg);color:var(--ink);line-height:1.45}
 .wrap{max-width:760px;padding:24px 16px 100px}
@@ -81,7 +81,7 @@ button:active{transform:scale(.985)}
 </head>
 <body>
 <div class="wrap">
-<h1>UPSHIFT <span class="betaMark">BETA</span> <span style="font-size:14px;color:#6d7687">v0.14.1</span></h1>
+<h1>UPSHIFT <span class="betaMark">BETA</span> <span style="font-size:14px;color:#6d7687">v0.14.2</span></h1>
 <p class="sub">一段上の自分へ。</p>
 
 <div class="toprow">
@@ -207,6 +207,14 @@ button:active{transform:scale(.985)}
 <p class="small">※消費カロリーは概算です。連携後にアプリ側の記録を修正しても、ヘルスケア側は自動更新されません。</p>
 </div>
 </section>
+
+<div class="card" id="dataTransferCard">
+<div class="section-title">記録のバックアップ・引き継ぎ</div>
+<p class="small">旧アプリから新しいUPSHIFTへ履歴を移すときや、機種変更のときに使います。書き出したJSONファイルは安全な場所に保管してください。</p>
+<div class="rowBtns"><button class="soft" onclick="exportGymBackup()">⬇ バックアップを書き出す</button><button class="soft" onclick="document.getElementById('gymImportFile').click()">⬆ バックアップを読み込む</button></div>
+<input type="file" id="gymImportFile" accept=".json,application/json" class="hidden" onchange="importGymBackup(event)">
+<p class="small" id="gymTransferStatus" aria-live="polite">読み込みは既存の履歴を残し、重複を避けて追加します。元のJSONは変更されません。</p>
+</div>
 
 <section id="historyTab" class="hidden">
 <div id="historyMain" class="card"><div class="section-title">履歴</div><p class="small">同じ日の記録はまとめて表示。日付をタップすると詳細が開きます。各記録から過去分もヘルスケアへ連携できます。</p><div id="historyList"></div></div>
@@ -1031,6 +1039,61 @@ function saveHistoryEdit(){
 function cancelHistoryEdit(){editingLogId=null;editWorking=null;editSelected='';if(window.editAddPanel)editAddPanel.classList.add('hidden');editHistoryCard.classList.add('hidden');historyMain.classList.remove('hidden')}
 function deleteHistory(id){if(!confirm('この保存記録を削除しますか？'))return;writeLogs(allLogs().filter(x=>x.id!==id));renderHistory()}
 function showTab(t){todayTab.classList.toggle('hidden',t!=='today');historyTab.classList.toggle('hidden',t!=='history');if(t==='history'){cancelHistoryEdit();renderHistory()}else cancelHistoryEdit()}
+
+// Backup format v1. Do not change historical localStorage keys.
+const GYM_BACKUP_KEYS=[STORE,PROFILE,RECENT,DRAFT,CUSTOM_ALIASES,'gym-health-synced-v1'];
+function exportGymBackup(){
+ try{
+  const data={format:'UPSHIFT_GYM_BACKUP',version:1,exportedAt:new Date().toISOString(),storage:{}};
+  for(const k of GYM_BACKUP_KEYS){const v=localStorage.getItem(k);if(v!==null)data.storage[k]=v}
+  const raw=JSON.stringify(data,null,2),blob=new Blob([raw],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='UPSHIFT-backup-'+localToday()+'.json';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),30000);
+  gymTransferStatus.textContent='バックアップの保存先を「ファイル」アプリ等で確認してください。';
+ }catch(e){alert('書き出しに失敗しました: '+e.message)}
+}
+async function importGymBackup(event){
+ const input=event.target, file=input.files&&input.files[0];if(!file)return;
+ try{
+  if(file.size>15*1024*1024)throw Error('ファイルが大きすぎます（上限15MB）');
+  const data=JSON.parse(await file.text());
+  if(!data||data.format!=='UPSHIFT_GYM_BACKUP'||data.version!==1||!data.storage||typeof data.storage!=='object')throw Error('UPSHIFTのバックアップJSONではありません');
+  const s=data.storage;
+  if(typeof s[STORE]!=='string')throw Error('運動履歴が含まれていません');
+  const incoming=JSON.parse(s[STORE]);
+  if(!Array.isArray(incoming)||incoming.some(x=>!x||typeof x!=='object'||Array.isArray(x)||typeof x.date!=='string'||!Array.isArray(x.sets)||!Array.isArray(x.cardio)))throw Error('運動履歴の形式が正しくありません');
+  const existing=allLogs();
+  // Stable fingerprint allows repeated import without duplicating legacy entries lacking IDs.
+  const fingerprint=x=>JSON.stringify([x.date,x.savedAt||'',x.sets,x.cardio,x.memo||'']);
+  const ids=new Set(existing.map(x=>x.id).filter(Boolean)),prints=new Set(existing.map(fingerprint));
+  const additions=[];
+  for(const x of incoming){
+   const fp=fingerprint(x);
+   if((x.id&&ids.has(x.id))||prints.has(fp))continue;
+   const c=JSON.parse(JSON.stringify(x));if(!c.id)c.id=uid();
+   additions.push(c);ids.add(c.id);prints.add(fp);
+  }
+  const message=`バックアップ内 ${incoming.length}件 / 新規 ${additions.length}件。現在の履歴 ${existing.length}件は保持します。読み込みますか？`;
+  if(!confirm(message))return;
+  // Save a rollback copy of current history before any mutation.
+  const rollback='upshift-preimport-'+new Date().toISOString();
+  const oldRaw=localStorage.getItem(STORE);
+  localStorage.setItem(rollback,oldRaw===null?'[]':oldRaw);
+  writeLogs([...existing,...additions]);
+  // Only fill optional preferences when absent; never overwrite current app settings.
+  for(const k of [PROFILE,RECENT,CUSTOM_ALIASES]){
+   if(localStorage.getItem(k)===null&&typeof s[k]==='string'){
+    JSON.parse(s[k]);localStorage.setItem(k,s[k]);
+   }
+  }
+  gymTransferStatus.textContent=`読み込み完了：${additions.length}件追加（合計 ${existing.length+additions.length}件）。既存の履歴は維持しました。`;
+  renderHistory();renderRecent();renderAllSuggestions();
+  alert(`移行完了：${additions.length}件追加しました。履歴画面で内容を確認してください。`);
+ }catch(e){alert('読み込みできませんでした。データは変更していません（詳細: '+e.message+'）')}
+ finally{input.value=''}
+}
+
 // One-time, conservative correction for v0.13.0 and older UTC-derived workout dates.
 // Only records saved in the JST 00:00-08:59 window with an exact UTC date match qualify.
 // Existing manually edited records are excluded; all original logs are backed up first.
