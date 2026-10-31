@@ -15,7 +15,7 @@
 .section-title{font-size:20px;font-weight:800;margin-bottom:10px} label{display:block;font-size:13px;color:var(--muted);margin:8px 0 4px}
 input,select,textarea{width:100%;border:1px solid #ccd4e0;border-radius:14px;padding:13px;font-size:18px;background:#fff}
 button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:16px}.primary{background:var(--blue);color:white}.soft{background:var(--blue2);color:#204d9e}.green{background:var(--green);color:#176b28}.red{background:var(--red);color:#9c2424}
-.toprow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-top:8px;min-width:0}.quick button{background:#f0f3f8;color:#33405a;padding:10px 0;min-width:0;width:100%;font-size:clamp(11px,3vw,16px);touch-action:manipulation}.grid2>div{min-width:0}
+.toprow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-top:8px;min-width:0}.quick button{background:#f0f3f8;color:#33405a;padding:10px 0;min-width:0;width:100%;font-size:clamp(11px,3vw,16px);touch-action:manipulation}.grid2>div{min-width:0}.quick-adjust{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.quick-adjust button{font-size:15px;padding:12px 3px;min-height:44px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.chip{background:#eef3ff;color:#244d9b;border-radius:999px;padding:10px 13px;font-weight:700}.chip.active{background:var(--blue);color:#fff}
 .suggest{margin-top:8px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}.suggest button{display:block;width:100%;text-align:left;border-radius:0;background:#fff;border-bottom:1px solid var(--line);color:var(--ink)}.suggest button:last-child{border-bottom:0}
 .exercise{border-top:1px solid var(--line);padding:13px 0}.exercise:first-child{border-top:0}.name{font-size:18px;font-weight:800}.small{font-size:13px;color:var(--muted)}
@@ -40,7 +40,7 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 </head>
 <body>
 <div class="wrap">
-<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.13.3</span></h1>
+<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.13.4</span></h1>
 <p class="sub">途中保存・あとから編集対応。過去履歴から今日のおすすめも提案します。</p>
 
 <div class="toprow">
@@ -99,11 +99,11 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 <div class="grid2" style="margin-top:8px">
 <div>
 <label>重量 kg</label><input id="kg" type="number" min="0" inputmode="decimal">
-<div class="quick"><button onclick="bump('kg',-5)">-5</button><button onclick="bump('kg',-2.5)">-2.5</button><button onclick="bump('kg',2.5)">+2.5</button><button onclick="bump('kg',5)">+5</button></div>
+<div class="quick quick-adjust"><button type="button" onclick="bump('kg',-5)">-5</button><button type="button" onclick="bump('kg',5)">+5</button><button type="button" onclick="bump('kg',-2.5)">-2.5</button><button type="button" onclick="bump('kg',2.5)">+2.5</button><button type="button" onclick="bump('kg',-1)">-1</button><button type="button" onclick="bump('kg',1)">+1</button></div>
 </div>
 <div>
 <label>回数</label><input id="reps" type="number" min="1" inputmode="numeric">
-<div class="quick"><button onclick="bump('reps',-2)">-2</button><button onclick="bump('reps',-1)">-1</button><button onclick="bump('reps',1)">+1</button><button onclick="bump('reps',2)">+2</button></div>
+<div class="quick quick-adjust"><button type="button" onclick="bump('reps',-2)">-2</button><button type="button" onclick="bump('reps',2)">+2</button><button type="button" onclick="bump('reps',-1)">-1</button><button type="button" onclick="bump('reps',1)">+1</button></div>
 </div>
 </div>
 <button class="primary" style="margin-top:12px;width:100%" onclick="addSet()">＋ このセットを記録</button>
@@ -195,8 +195,8 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 </div>
 
 <div class="grid2" style="margin-top:8px">
-<div><label>重量 kg</label><input id="editKg" type="number" min="0" inputmode="decimal"><div class="quick"><button onclick="editBump('editKg',-5)">-5</button><button onclick="editBump('editKg',-2.5)">-2.5</button><button onclick="editBump('editKg',2.5)">+2.5</button><button onclick="editBump('editKg',5)">+5</button></div></div>
-<div><label>回数</label><input id="editReps" type="number" min="1" inputmode="numeric"><div class="quick"><button onclick="editBump('editReps',-2)">-2</button><button onclick="editBump('editReps',-1)">-1</button><button onclick="editBump('editReps',1)">+1</button><button onclick="editBump('editReps',2)">+2</button></div></div>
+<div><label>重量 kg</label><input id="editKg" type="number" min="0" inputmode="decimal"><div class="quick quick-adjust"><button type="button" onclick="editBump('editKg',-5)">-5</button><button type="button" onclick="editBump('editKg',5)">+5</button><button type="button" onclick="editBump('editKg',-2.5)">-2.5</button><button type="button" onclick="editBump('editKg',2.5)">+2.5</button><button type="button" onclick="editBump('editKg',-1)">-1</button><button type="button" onclick="editBump('editKg',1)">+1</button></div></div>
+<div><label>回数</label><input id="editReps" type="number" min="1" inputmode="numeric"><div class="quick quick-adjust"><button type="button" onclick="editBump('editReps',-2)">-2</button><button type="button" onclick="editBump('editReps',2)">+2</button><button type="button" onclick="editBump('editReps',-1)">-1</button><button type="button" onclick="editBump('editReps',1)">+1</button></div></div>
 </div>
 <div id="editSideWrap" class="sideWrap hidden"><label>左右</label><select id="editSide"><option value="左">左</option><option value="右">右</option></select></div>
 
