@@ -15,7 +15,7 @@
 .section-title{font-size:20px;font-weight:800;margin-bottom:10px} label{display:block;font-size:13px;color:var(--muted);margin:8px 0 4px}
 input,select,textarea{width:100%;border:1px solid #ccd4e0;border-radius:14px;padding:13px;font-size:18px;background:#fff}
 button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:16px}.primary{background:var(--blue);color:white}.soft{background:var(--blue2);color:#204d9e}.green{background:var(--green);color:#176b28}.red{background:var(--red);color:#9c2424}
-.toprow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}.quick button{background:#f0f3f8;color:#33405a;padding:10px 6px}
+.toprow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-top:8px;min-width:0}.quick button{background:#f0f3f8;color:#33405a;padding:10px 0;min-width:0;width:100%;font-size:clamp(11px,3vw,16px);touch-action:manipulation}.grid2>div{min-width:0}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.chip{background:#eef3ff;color:#244d9b;border-radius:999px;padding:10px 13px;font-weight:700}.chip.active{background:var(--blue);color:#fff}
 .suggest{margin-top:8px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}.suggest button{display:block;width:100%;text-align:left;border-radius:0;background:#fff;border-bottom:1px solid var(--line);color:var(--ink)}.suggest button:last-child{border-bottom:0}
 .exercise{border-top:1px solid var(--line);padding:13px 0}.exercise:first-child{border-top:0}.name{font-size:18px;font-weight:800}.small{font-size:13px;color:var(--muted)}
@@ -40,7 +40,7 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 </head>
 <body>
 <div class="wrap">
-<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.13.2</span></h1>
+<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.13.3</span></h1>
 <p class="sub">途中保存・あとから編集対応。過去履歴から今日のおすすめも提案します。</p>
 
 <div class="toprow">
