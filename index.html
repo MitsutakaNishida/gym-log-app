@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#2f6fed">
+<meta name="theme-color" content="#172b46">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>運動記録 β</title>
+<title>UPSHIFT</title>
 <style>
 :root{--bg:#f5f7fb;--card:#fff;--ink:#172033;--muted:#6d7687;--blue:#2f6fed;--blue2:#eaf1ff;--green:#daf6df;--red:#ffe2e2;--line:#dfe5ef}
 *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -36,12 +36,53 @@ button{border:0;border-radius:16px;padding:13px 15px;font-weight:700;font-size:1
 .healthBox{margin-top:12px;padding:13px;border:1px solid #d7e8dc;border-radius:16px;background:#f7fff9}.healthBtn{background:#e5f7e9;color:#176b28}.healthBtnSynced{background:#edf1f5;color:#5f6875}.healthSetup{margin-top:10px;padding:12px;border-radius:14px;background:#f7f9fd;border:1px solid var(--line);font-size:13px;line-height:1.6}.healthSetup ol{padding-left:20px;margin:8px 0}.healthSetup code{font-size:12px;background:#eef2f7;padding:2px 5px;border-radius:6px}.healthStatus{margin-top:6px;font-size:12px;color:#5f6875}
 .exerciseMeta{margin-top:10px;padding:12px;border:1px solid #dbe4f2;border-radius:14px;background:#f8fbff;font-size:13px;line-height:1.6}.exerciseMeta b{color:#203d75}.careNote{margin-top:8px;padding:9px 10px;border-radius:12px;background:#fff7e8;color:#77521a}.safetyNote{margin-top:8px;padding:9px 10px;border-radius:12px;background:#fff1f1;color:#8d2f2f}.sideWrap{margin-top:8px}.sideTag{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:999px;background:#eef3ff;color:#244d9b;font-size:11px;font-weight:800}.editSideRow{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;margin:-2px 0 9px 0;padding-left:6px}.editSideRow select{font-size:14px;padding:9px}
 
+
+/* v0.14.1 visual system: flat, warm off-white / deep navy / muted gold */
+:root{--bg:#f6f3ed;--card:#fffdf9;--ink:#192b45;--muted:#667184;--blue:#192f4c;--blue2:#e9edf2;--green:#e6eee6;--red:#f5e9e5;--line:#e4dfd6;--gold:#bd985b}
+body{background:var(--bg);color:var(--ink);line-height:1.45}
+.wrap{max-width:760px;padding:24px 16px 100px}
+h1{font-size:30px;letter-spacing:-.035em;font-weight:850;margin:2px 0 3px}
+.betaMark{display:inline-block;vertical-align:middle;font-size:10px;letter-spacing:.12em;font-weight:800;color:#876638;border:1px solid #d7bd91;border-radius:6px;padding:3px 6px}
+.sub{font-size:13px;letter-spacing:.02em;margin-bottom:19px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:none;padding:18px;margin:12px 0}
+.section-title{font-size:19px;letter-spacing:-.015em}
+label{color:#657185;font-weight:650;letter-spacing:.01em}
+input,select,textarea{border-color:#d8d6d0;border-radius:11px;color:var(--ink);background:#fff;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:2px solid #bd985b;outline-offset:1px;border-color:#bd985b}
+button{border-radius:11px;transition:background-color .12s ease,transform .08s ease;touch-action:manipulation}
+button:active{transform:scale(.985)}
+.primary{background:var(--blue);color:#fff}
+.soft{background:#e9edf2;color:#233d5c}
+.green{background:#e1ebe2;color:#2d6545}
+.red{background:#f5e8e4;color:#9b4d41}
+.toprow{background:#e9e6df;padding:4px;border-radius:14px;gap:4px;margin:14px 0 19px}
+.toprow button{border-radius:10px;padding:12px 8px}
+.toprow .soft{background:transparent;color:#526174}
+.quick button{background:#efeee9;color:#23364f;border:1px solid #e3e0d9;border-radius:9px}
+.quick button:active{background:#dfd9cc}
+.quick-adjust button{min-height:46px;font-size:15px;font-variant-numeric:tabular-nums}
+.chip{background:#eeeae2;color:#334660;border-radius:10px}
+.chip.active{background:var(--blue);color:#fff}
+.stat{background:#f0eee9;border:1px solid #e8e4dc;border-radius:12px}
+.stat b{color:#192f4c;font-variant-numeric:tabular-nums}
+.summary .stat:first-child{border-top:3px solid var(--gold)}
+.summary .stat:nth-child(2){border-top:3px solid #778da3}
+.summary .stat:nth-child(3){border-top:3px solid #8d9a81}
+.historyDay{border-radius:13px;border-color:var(--line)}
+.historyHead{background:#fffdf9}
+.historyBody{background:#faf8f3}
+.suggestCard,.exerciseMeta,.editAddPanel{background:#faf8f3;border-color:#e4dfd6;border-radius:13px}
+.suggestScore,.badge,.sideTag{background:#eae5da;color:#75572e}
+.healthBox{background:#f7f8f4;border-color:#dfe6dc}
+.draftNotice{background:#fbf5e8;border-color:#e8d7b5}
+@media(min-width:600px){.wrap{padding-top:32px}.card{padding:22px}}
+
 </style>
 </head>
 <body>
 <div class="wrap">
-<h1>運動記録 β <span style="font-size:14px;color:#6d7687">v0.13.4</span></h1>
-<p class="sub">途中保存・あとから編集対応。過去履歴から今日のおすすめも提案します。</p>
+<h1>UPSHIFT <span class="betaMark">BETA</span> <span style="font-size:14px;color:#6d7687">v0.14.1</span></h1>
+<p class="sub">一段上の自分へ。</p>
 
 <div class="toprow">
 <button class="primary" onclick="showTab('today')">今日</button>

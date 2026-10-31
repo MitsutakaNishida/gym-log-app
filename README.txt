@@ -1,3 +1,1 @@
-Gym Log v0.13.4
-Quick adjustment: weight +/-1, +/-2.5, +/-5 kg; reps +/-1, +/-2. Direct number entry and previous-copy retained.
-A2 icon (off-white, navy, gold). Local storage keys unchanged.
+UPSHIFT v0.14.1: name, home-screen label and tagline updated. Upload extracted app files to MitsutakaNishida/gym-log-app. Local workout data storage keys remain unchanged.
