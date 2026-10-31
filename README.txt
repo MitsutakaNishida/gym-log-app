@@ -1,1 +1,4 @@
-UPSHIFT v0.14.2: JSON backup/export and safe merge import. Deploy same files to gym-log-app. Open OLD home-screen app after deployment to export; open NEW UPSHIFT home-screen app to import. Do not delete old app until validated.
+UPSHIFT v0.14.3 / 更新確認機能
+GitHub Pages の gym-log-app リポジトリのルートへ全ファイルを上書きしてください。
+旧ホーム画面アプリの削除・Safariデータ消去はしないでください。
+旧PWAに更新が届く保証はありません。履歴が残る旧アプリを保持してください。

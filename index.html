@@ -81,8 +81,9 @@ button:active{transform:scale(.985)}
 </head>
 <body>
 <div class="wrap">
-<h1>UPSHIFT <span class="betaMark">BETA</span> <span style="font-size:14px;color:#6d7687">v0.14.2</span></h1>
+<h1>UPSHIFT <span class="betaMark">BETA</span> <span style="font-size:14px;color:#6d7687">v0.14.3</span></h1>
 <p class="sub">一段上の自分へ。</p>
+<div class="card" style="padding:12px 16px;margin:10px 0"><button class="soft" onclick="checkUpShiftUpdate()" style="width:100%">🔄 最新版を確認・再読み込み</button><p id="upshiftUpdateStatus" style="font-size:13px;color:var(--muted);margin:8px 0 0">履歴を削除せず、更新を確認します。</p></div>
 
 <div class="toprow">
 <button class="primary" onclick="showTab('today')">今日</button>
@@ -1161,6 +1162,24 @@ function migrateDerivedStatsV09(){
 }
 
 (function load(){const p=JSON.parse(localStorage.getItem(PROFILE)||'{}');if(p.weight)weight.value=p.weight;if(p.intensity)intensity.value=p.intensity;populateCardioType();migrateDerivedStatsV09();migrateLegacyWorkoutDates();renderRecent();render();renderAliases();renderAllSuggestions();showDraftNotice();memo.addEventListener('input',()=>{if(current.sets.length||current.cardio.length)saveDraft(false)});handleHealthCallback();})();
+async function checkUpShiftUpdate(){
+ const status=document.getElementById('upshiftUpdateStatus');
+ status.textContent='更新を確認しています…';
+ try{
+  if('serviceWorker' in navigator){
+   const reg=await navigator.serviceWorker.getRegistration();
+   if(reg)await reg.update();
+  }
+  const response=await fetch('./index.html?upshift_check='+Date.now(),{cache:'no-store'});
+  if(!response.ok)throw Error('HTTP '+response.status);
+  const html=await response.text();
+  const match=html.match(/<h1>UPSHIFT[\s\S]{0,180}?(v\d+\.\d+\.\d+)/);
+  const version=match?match[1]:'バージョン不明';
+  status.textContent='公開版: '+version+'。画面を再読み込みします。';
+  // No localStorage, IndexedDB, or cache deletion. Reload only this app context.
+  location.replace('./?upshift_reload='+Date.now());
+ }catch(e){status.textContent='確認に失敗: '+e.message+'。履歴は変更していません。'}
+}
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 </script>
 </body>
